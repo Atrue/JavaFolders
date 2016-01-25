@@ -1,0 +1,88 @@
+package application;
+
+import javafx.scene.paint.Color;
+
+import java.awt.HeadlessException;
+import java.util.ArrayList;
+import java.util.Random;
+
+import javafx.scene.Scene;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
+
+public class MyCanvas extends Canvas {  
+	private static Random r = new Random();
+    private GraphicsContext gc;
+    private double dx;
+    
+    private BGLine lines[] = new BGLine[5];
+    
+    public MyCanvas(Scene scene){  
+        super(scene.getWidth(), scene.getHeight());  
+        widthProperty().bind(scene.widthProperty());
+        gc = getGraphicsContext2D();  
+        for(int i=0;i<lines.length;i++){
+        	lines[i] = new BGLine((int)getHeight(), (int)getWidth(),i*500/lines.length);
+        }
+        repaintContext();
+    }  
+     
+   public void repaintContext(){  
+	   double width = getWidth();  
+	   double height = getHeight();  
+	   gc.clearRect(0, 0, width, height); // ������� ������� 
+	   
+	   for(int i = 0; i < lines.length; i++){   
+		   lines[i].update();
+		   gc.setFill(lines[i].getColor());
+		   gc.fillPolygon(lines[i].getDotX(), lines[i].getDotY(), lines[i].getCount()); 
+	   } 
+   }  
+   public class BGLine{
+	   	private int acc = 200;
+	   	private int filling = 10;
+	   	private int _partX;
+		private double dotX[] = new double[acc];
+		private double dotY[] = new double[acc];
+		
+		private Color bgcolor;
+		
+		private int height;
+		private int width;
+		
+		private double _dx = 0; 
+		public BGLine(int height, int width,int i){
+			this.height = height;
+			this.width = width;
+			this._partX = i;
+			bgcolor = Color.color(r.nextDouble(), r.nextDouble(), r.nextDouble());
+		}
+		public void update(){
+			double _koef =  width/(acc/2);
+			for(int x=0; x<acc/2; x++){
+				   double rad = (x +_dx)*18 * Math.PI / 180;
+				   double dY = _koef*x;
+				   double dX = Math.sin(rad) *filling + _partX;
+				   
+				   dotX[x] = dX - 100;
+				   dotX[acc-1 - x] = dX + 100;
+				   dotY[x] = dY;
+				   dotY[acc-1 - x] = dY;
+			   }
+			_dx += r.nextDouble();
+		}
+		public int getCount(){
+			return acc;
+		}
+		public double[] getDotX(){
+			return dotX;
+		}
+		public double[] getDotY(){
+			return dotY;
+		}
+		public Color getColor(){
+			return bgcolor;
+		}
+   }
+}  
+

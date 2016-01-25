@@ -12,13 +12,14 @@ import javafx.scene.input.MouseEvent;
 
 public class MyLabel extends Label implements EventHandler<MouseEvent> {  
 	  
-private static Random r = new Random(); // пригодиться всегда  
-private boolean isSelected = false;    // флажок фокуса на наш обьект  
-private Point2D diff;                 // координаты курсора мыши относительно нашего обьекта,  
+private static Random r = new Random(); // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ  
+private boolean isSelected = false;    // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ  
+private Point2D diff;                 // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ,  
 private MyCanvas canvas;
-                            // для плавного передвижения  
-  
-public MyLabel(String text, MyCanvas canvas){      //Конструктор  
+private double X;
+private double Y;// пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ  
+private boolean isWay = true;
+public MyLabel(String text, MyCanvas canvas){      //пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ  
    super(text);  
    this.canvas = canvas; 
    setPrefWidth(100);  
@@ -26,9 +27,24 @@ public MyLabel(String text, MyCanvas canvas){      //Конструктор
    setId("my_label");
    setEventHandler(MouseEvent.ANY, this);
     setAlignment(Pos.CENTER);  
-    setLayoutY(r.nextDouble() * 500);  
-    setLayoutX(r.nextDouble() * 500);  
+    X = r.nextDouble() * 500;
+    Y = r.nextDouble() * 300 + 200;
+    setLayoutY(X);  
+    setLayoutX(Y);  
     setRotate(r.nextDouble() * 180);  
+}
+public MyLabel(String text, MyCanvas canvas, int x, int y){
+	   super(text);  
+	   this.canvas = canvas; 
+	   setPrefWidth(100);  
+	   setPrefHeight(50); 
+	   setId("my_label");
+	   setEventHandler(MouseEvent.ANY, this);
+	    setAlignment(Pos.CENTER);  
+	    X = x;
+	    Y = y;
+	    setLayoutX(X);  
+	    setLayoutY(Y);  
 }
 
 @Override
@@ -56,7 +72,18 @@ public void handle(MouseEvent mouseEvent) {
 public double getCenterX(){  
     return getLayoutX() + getPrefWidth()/2;  
 }  
-
+public void move(){
+	X = isWay ? X + 5 : X - 5;
+	if (X > 450){
+		isWay = false;
+	}
+	if (X < 50){
+		isWay = true;
+	}
+	setLayoutX(X);		
+	
+	
+}
 
 public double getCenterY(){  
     return getLayoutY() + getPrefHeight()/2;  

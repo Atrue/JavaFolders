@@ -11,11 +11,14 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.LabelBuilder;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
-
+import javafx.event.Event;
+import javafx.event.EventHandler;
 
 public class Main extends Application {
 	private int windowWidth = 600;  
@@ -28,14 +31,23 @@ public class Main extends Application {
 		Scene myScene = new Scene(root, windowWidth, windowHeight);  
 		canvas = new MyCanvas(myScene);
 		root.getChildren().add(canvas); 
-		MyLabel a = new MyLabel("Some text", canvas);  
+		MyLabel a = new MyLabel("Some text", canvas, 250, 400);  
 	    root.getChildren().add(a); 
 		
 		for(int i =0; i < 5; i++) {  
-			MyLabel b = new MyLabel("Some text", canvas);  
-			canvas.addPair(a, b);  
+			MyLabel b = new MyLabel("Some text", canvas, 100 + 70*i, 50 + 13*i);  
 			root.getChildren().add(b);  
 		}
+		myScene.setOnKeyPressed(new EventHandler<KeyEvent>() {
+
+			 @Override  
+	            public void handle(KeyEvent keyEvent) {  
+	                if (keyEvent.getCode() == KeyCode.ENTER)// Если зажата кнопка Ентер   
+	                   //pool.select(null);               //  Снять выделение  
+	                   canvas.repaintContext();         // Перерисовать  
+	            }  
+	              
+		});
 		return myScene; 
 	    
 	} 
