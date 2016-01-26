@@ -1,0 +1,78 @@
+package application;
+
+import java.util.Random;
+
+
+import javafx.event.Event;
+import javafx.event.EventHandler;
+import javafx.geometry.Point2D;
+import javafx.geometry.Point3D;
+import javafx.geometry.Pos;
+import javafx.scene.control.Label;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
+
+public class Someone extends Label {  
+
+	
+private double angle = 0;	
+
+private double dX = 0;
+private double dY = 0;
+private double dAngle = 0;	
+private double dSpeed = 0;
+
+
+private double maxAngle = 3;
+
+
+
+private double maxSpeed = 10;
+private double lostSpeed = 0.01;
+private double brakSpeed = 0.15;
+private double lostTurnKoef = 0.01;
+private double addSpeed = 0.04;
+private double addPostSpeed = 0.015;
+
+private boolean _up = false;
+private boolean _left = false;
+private boolean _right = false;
+private boolean _down = false;
+
+
+
+
+private static Random r = new Random(); // ����������� ������  
+private boolean isSelected = false;    // ������ ������ �� ��� ������  
+private Point2D diff;                 // ���������� ������� ���� ������������ ������ �������,  
+private MyCanvas canvas;
+private double X;
+private double Y;// ��� �������� ������������  
+private boolean isWay = true;
+public Someone(String text, MyCanvas canvas){      //�����������  
+   super(text);  
+   this.canvas = canvas; 
+   setPrefWidth(20);  
+   setPrefHeight(20); 
+   setId("my_label");
+    setAlignment(Pos.CENTER);  
+    X = r.nextDouble() * 500;
+    Y = 0;
+    setLayoutY(X);  
+    setLayoutX(Y);  
+    setRotate(angle);  
+}
+  
+public double getCenterX(){  
+    return getLayoutX() + getPrefWidth()/2;  
+}  
+
+public double getCenterY(){  
+    return getLayoutY() + getPrefHeight()/2;  
+}  
+public void update(){
+	Y ++;
+	setLayoutY(Y);
+}
+}  

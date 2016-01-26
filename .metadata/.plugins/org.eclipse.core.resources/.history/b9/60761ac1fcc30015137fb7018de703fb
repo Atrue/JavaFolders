@@ -1,0 +1,91 @@
+package application;
+
+import java.util.Random;
+
+
+import javafx.event.Event;
+import javafx.event.EventHandler;
+import javafx.geometry.Point2D;
+import javafx.geometry.Pos;
+import javafx.scene.control.Label;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
+
+public class MyLabel extends Label implements EventHandler<KeyEvent> {  
+
+	
+private double angle = 0.0;	
+	
+	
+private static Random r = new Random(); // ����������� ������  
+private boolean isSelected = false;    // ������ ������ �� ��� ������  
+private Point2D diff;                 // ���������� ������� ���� ������������ ������ �������,  
+private MyCanvas canvas;
+private double X;
+private double Y;// ��� �������� ������������  
+private boolean isWay = true;
+public MyLabel(String text, MyCanvas canvas){      //�����������  
+   super(text);  
+   this.canvas = canvas; 
+   setPrefWidth(100);  
+   setPrefHeight(50); 
+   setId("my_label");
+   setEventHandler(KeyEvent.ANY, this);
+    setAlignment(Pos.CENTER);  
+    X = r.nextDouble() * 500;
+    Y = r.nextDouble() * 300 + 200;
+    setLayoutY(X);  
+    setLayoutX(Y);  
+    setRotate(r.nextDouble() * 180);  
+}
+public MyLabel(String text, MyCanvas canvas, int x, int y){
+	   super(text);  
+	   this.canvas = canvas; 
+	   setPrefWidth(100);  
+	   setPrefHeight(50); 
+	   setId("my_label");
+	   setEventHandler(KeyEvent.ANY, this);
+	    setAlignment(Pos.CENTER);  
+	    X = x;
+	    Y = y;
+	    setLayoutX(X);  
+	    setLayoutY(Y);  
+}
+  
+public double getCenterX(){  
+    return getLayoutX() + getPrefWidth()/2;  
+}  
+public void move(){
+	X = isWay ? X + 5 : X - 5;
+	if (X > 450){
+		isWay = false;
+	}
+	if (X < 50){
+		isWay = true;
+	}
+	setLayoutX(X);		
+	
+	
+}
+
+public double getCenterY(){  
+    return getLayoutY() + getPrefHeight()/2;  
+}  
+public void select(boolean fl){  
+    isSelected = fl;  
+    if (fl){  
+        setId("my_label_selected");  
+        toFront();  
+    } else{  
+        setId("my_label");  
+    } 
+}
+@Override
+public void handle(KeyEvent keyEvent) {
+	if (keyEvent.getCode() == KeyCode.W){
+		
+	}
+}
+  
+}  
