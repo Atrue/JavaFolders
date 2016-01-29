@@ -25,7 +25,10 @@ private boolean _left = false;
 private boolean _right = false;
 private boolean _down = false;
 
-
+private double x1;
+private double x2;
+private double y1;
+private double y2;
 
 
 private static Random r = new Random(); // ����������� ������  
@@ -90,6 +93,12 @@ public void select(boolean fl){
     } 
 }
 public void update(){
+	
+	x1 = getLayoutX();
+	x2 = x1 + getPrefHeight();
+	y1 = getLayoutY();
+	y2 = y1 + getPrefWidth();
+	
 	if (_left && !_right){
 		angle -= 1;
 	}
@@ -109,7 +118,25 @@ public void update(){
 	if (Y < 450){
 		falling += G/30;
 	}else{
+		if(x1 > 250 || x2> 250){
+			System.out.println("ok");
+			if (x1 > 250){
+				falling += G/30;
+			}else{
+				double a = (250-x1)/getPrefWidth();
+				if (a < 0.5){
+					falling += G/30 * (1-a);
+				}
+			}
+			
+		}
+		
+		
 		falling = 0;
+		
+		
+		
+		
 		double ss = Math.abs(angle % 90);
 		if (ss < 45){
 			angle = Math.signum(angle) * (Math.abs(angle) - 2 > 0? Math.abs(angle) - 2: 0);
@@ -123,6 +150,12 @@ public void update(){
 	//
 	
 	Y += falling;
+	
+	
+	
+	
+	
+	
 	
 	setLayoutX(X);
 	setLayoutY(Y);

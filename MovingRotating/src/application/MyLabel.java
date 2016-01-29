@@ -123,6 +123,9 @@ public void update(){
 	if (_down && !_up){
 		if (dSpeed > 0)
 			dSpeed = dSpeed > brakSpeed ? dSpeed - brakSpeed: 0;
+		else
+			dSpeed -= addSpeed;
+				
 	}
 	
 	
@@ -136,9 +139,25 @@ public void update(){
 	System.out.println();
 	
 	
-	if ( X + dX < 0){
-		dSpeed = dSpeed - Math.abs(dX);
+	if ( X + dX < 50){
+		dSpeed = dSpeed - Math.abs(dX)/dSpeed;
 		dX = -dX;
+		dAngle = -dY;
+	}
+	if (X + dX > 550){
+		dSpeed = dSpeed - Math.abs(dX)/dSpeed;
+		dX = -dX;
+		dAngle = dY;
+	}
+	if (Y + dY < 50 ){
+		dSpeed = dSpeed - Math.abs(dY)/dSpeed;
+		dY = -dY;
+		dAngle = dX;
+	}
+	if (Y + dY > 550 ){
+		dSpeed = dSpeed - Math.abs(dY)/dSpeed;
+		dY = -dY;
+		dAngle = -dX;
 	}
 	
 	
@@ -153,7 +172,10 @@ public void update(){
 	dAngle = 0;
 	dX = 0;
 	dY = 0;
-	dSpeed = dSpeed > lostSpeed ? dSpeed - lostSpeed: 0;
+	if (dSpeed > 0)
+		dSpeed = dSpeed > lostSpeed ? dSpeed - lostSpeed: 0;
+		else
+			dSpeed = Math.abs(dSpeed) > lostSpeed ? dSpeed + lostSpeed: 0;
 }
 public void keyPress(KeyEvent keyEvent) {
 	if (keyEvent.getCode() == KeyCode.W){

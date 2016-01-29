@@ -16,6 +16,9 @@ public class MyCanvas extends Canvas {
     private double dx;
     
     private BGLine lines[] = new BGLine[4];
+	private int doX=0;
+	private int doY=0;
+	private int doZ=0;
     
     public MyCanvas(Scene scene){  
         super(scene.getWidth(), scene.getHeight());  
@@ -27,17 +30,87 @@ public class MyCanvas extends Canvas {
         repaintContext();
     }  
      
-   public void repaintContext(){  
+   public void repaintContext(){ 
+	   
+	   
+	   gc.setFill(Color.color(0.3, 0.4, 1));
+       gc.fillRect(0, 0, 600, 10);
+       gc.fillRect(0, 590, 600, 10);
+       gc.fillRect(0, 0, 10, 600);
+       gc.fillRect(590, 0, 10, 600);
+       gc.setFill(Color.CHOCOLATE);
+       gc.fillRect(10, 10, 580, 580);
+	   
+       update();
+	   
 	   double width = getWidth();  
 	   double height = getHeight();  
-	   gc.clearRect(0, 0, width, height); // ������� ������� 
+	   //gc.clearRect(0, 0, width, height); // ������� ������� 
 	   
 	   for(int i = 0; i < lines.length; i++){   
-		   lines[i].update();
-		   gc.setFill(lines[i].getColor());
-		   gc.fillPolygon(lines[i].getDotX(), lines[i].getDotY(), lines[i].getCount()); 
+		   //lines[i].update();
+		   //gc.setFill(lines[i].getColor());
+		   //gc.fillPolygon(lines[i].getDotX(), lines[i].getDotY(), lines[i].getCount()); 
 	   } 
    }  
+   public void update(){
+	   gc.clearRect(0, 0, 600, 600);
+	   
+	   double kY = Math.sin(30*Math.PI/180);
+	   double kX = Math.cos(30*Math.PI/180);
+	   double kZ = 1;
+	   
+	   for(int z=0;z<5;z++){
+		   for(int j=0;j<5;j++){
+			   for (int i =0;i<5;i++){
+				   int lenght = 20;
+				   double stX = -i*(lenght + doX)*kX+200 + j*(lenght+doY)*kX;
+				   double stY = 300+i*(lenght + doX)*kY + j*(lenght + doY)*kY - z*(lenght +doZ)*kZ;
+				   
+				   gc.setFill(Color.ALICEBLUE);
+				   double[] xPoints = {stX, stX + lenght*kX, stX + lenght*kX, stX};
+				   double[] yPoints = {stY, stY - lenght*kY, stY - lenght*kY + lenght, stY+lenght};
+				   gc.fillPolygon(xPoints, yPoints, 4);
+				   
+				   gc.setFill(Color.LIGHTCORAL);
+				   double[] xPoints2 = {stX, stX - lenght*kX, stX - lenght*kX, stX};
+				   double[] yPoints2 = {stY, stY - lenght*kY, stY - lenght*kY + lenght, stY+lenght};
+				   gc.fillPolygon(xPoints2, yPoints2, 4);
+				   
+				   
+				   gc.setFill(Color.LEMONCHIFFON);
+				   double[] xPoints3 = {stX, stX - lenght*kX, stX, stX + lenght*kX};
+				   double[] yPoints3 = {stY, stY - lenght*kY, stY - 2*lenght*kY, stY - lenght*kY};
+				   gc.fillPolygon(xPoints3, yPoints3, 4);
+			   }
+		   }
+	   }
+	   
+	   if (doX<20 && doY==0 && doZ==0){
+		   doX++;
+	   }else{
+		   if(doY<20 && doZ ==0){
+			   doY ++;
+		   }else{
+			   if(doZ<20 && doY==20){
+				   doZ++;
+			   }else{
+				   if (doY >0){
+					   doY--;
+				   }else{
+					   if(doZ>0){
+						   doZ--;
+					   }else{
+						   if(doX>0){
+							   doX--;
+						   }
+					   }
+				   }
+			   }
+		   }
+	   }
+	   
+   }
    public class BGLine{
 	   	private int acc = 200;
 	   	private int filling = 10;
