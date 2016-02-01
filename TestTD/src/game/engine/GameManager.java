@@ -9,12 +9,14 @@ import javafx.animation.AnimationTimer;
 import javafx.animation.PathTransition;
 import javafx.beans.property.LongProperty;
 import javafx.beans.property.SimpleLongProperty;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
@@ -36,7 +38,8 @@ public class GameManager {
     private  Scene gameScene;                       // The main viewport
     private  GameController gameController;         // Handles fxml attributes (buttons and labels)
     private  AnimationTimer gameLoop;               // Used for the gui thread
-
+	private Group tilemapGroup;
+	private Label hoverTower;
     /**
      * Initializes the game
      *
@@ -52,7 +55,8 @@ public class GameManager {
         // Creates gui hierarchy
         FXMLLoader loader = new FXMLLoader(MenuNavigator.GAMEUI);
         StackPane gamePane = new StackPane();
-        Group tilemapGroup = new Group();
+        tilemapGroup = new Group();
+        
         monsterLayer = new Group();
         monsterLayer.getChildren().add(tilemapGroup);
         tilemapGroup.getChildren().add(gameMap);
@@ -66,13 +70,33 @@ public class GameManager {
         gameController = loader.<GameController>getController();
         gameController.setGameManager(this);
 
+        
+        
         MenuNavigator.stage.setScene(gameScene);
         Monster.setPath(gameMap.getPath());
         startGameLoop();
+        
+        
+        
+        hoverTower = new Label();
+        hoverTower.setPrefWidth(100);  
+        hoverTower.setPrefHeight(50); 
+        hoverTower.setLayoutX(40);
+        hoverTower.setLayoutY(40);
+        hoverTower.setId("my_label");
+        hoverTower.setText("OLOL");
+        tilemapGroup.getChildren().add(hoverTower);
     }
 
     public  Scene getGameScene(){
         return gameScene;
+    }
+    
+    public Label getView(){
+    	return hoverTower;
+    }
+    public TileMap getMap(){
+    	return gameMap;
     }
 
 

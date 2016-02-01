@@ -9,6 +9,7 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.shape.Circle;
 
 
 public class GameController {
@@ -26,13 +27,17 @@ public class GameController {
 
     private GameManager gameManager;
 
+    private boolean hoverState = false;
+    
     public void setGameManager(GameManager gameManager){
         this.gameManager = gameManager;
+        gameManager.getGameScene().setOnMouseClicked(new buyTower());
+        gameManager.getGameScene().setOnMouseMoved(new MouseMove());
     }
 
     //set mouse clicks to buy and place tower
     public void buyTower(){
-        gameManager.getGameScene().setOnMouseClicked(new buyTower());
+        hoverState = !hoverState;
     }
     public void openMenu(){
         gameManager.pauseGame();
@@ -46,12 +51,34 @@ public class GameController {
         this.timeLabel.setText(timeLabel);
     }
 
-
+    
     //buy tower at mouse click tile
     class buyTower implements EventHandler<MouseEvent> {
         public void handle(MouseEvent me) {
-            gameManager.buyTower(me.getX(),me.getY());
+        	if (hoverState){
+        		
+        		gameManager.buyTower(me.getX(),me.getY());
+            }else{
+            	return;
             }
         }
-
+    }
+    //buy tower at mouse click tile
+    class MouseMove implements EventHandler<MouseEvent> {
+        public void handle(MouseEvent me) {
+        	if (hoverState){
+        		int xTile = (int)(me.getX() / 64);
+        		int yTile = (int)(me.getY() / 64);
+        		if(gameManager.getMap().nodeOpen(xTile,yTile)){
+        			gameManager.getView().setId("my_label");
+        		}else{
+        			gameManager.getView().setId("my_label_selected");
+        		}
+        		gameManager.getView().setLayoutX(xTile*64);
+        		gameManager.getView().setLayoutY(yTile*64);
+            }else{
+            	return;
+            }
+        }
+    }
 }
