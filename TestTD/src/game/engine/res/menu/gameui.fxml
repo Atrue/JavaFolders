@@ -1,69 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
 <?scenebuilder-stylesheet menustyle.css?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.effect.*?>
+<?import java.lang.*?>
+<?import javafx.geometry.*?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<GridPane fx:controller="game.engine.GameController"
-          xmlns:fx="http://javafx.com/fxml" alignment="BOTTOM_RIGHT" hgap="10" vgap="10">
-          <padding><Insets top="100" right="50" bottom="50" left="25"/></padding>
-
-    <Button fx:id ="buyTowerButton"
-            onAction = "#buyTower"
-            GridPane.rowIndex="0"
-            GridPane.columnIndex="0"
-            GridPane.rowSpan="4"
-            prefHeight="80"
-            prefWidth="80"
-            />
-    <Button fx:id = "openMenuButton"
-            onAction = "#openMenu"
-            GridPane.rowIndex="0"
-            GridPane.columnIndex="1"
-            GridPane.rowSpan="4"
-            prefHeight="80"
-            prefWidth="80"
-            />
-
-    <Label fx:id = "resourceLabel"
-           text = "Gold: "
-           GridPane.rowIndex="0"
-           GridPane.columnIndex="4"
-           />
-    <Label fx:id = "levelLabel"
-           text = "Wave: "
-           GridPane.rowIndex="1"
-           GridPane.columnIndex="4"
-           />
-    <Label fx:id = "livesLabel"
-           text = "Lives: "
-           GridPane.rowIndex="3"
-           GridPane.columnIndex="4"
-           />
-    <Label fx:id = "scoreLabel"
-           text = "Score: "
-           GridPane.rowIndex="2"
-           GridPane.columnIndex="4"
-            />
-    <Label fx:id = "currentResources"
-              GridPane.rowIndex="0"
-              GridPane.columnIndex="5"
-              />
-    <Label fx:id = "currentLevel"
-              GridPane.rowIndex="1"
-              GridPane.columnIndex="5"
-              />
-    <Label fx:id = "currentScore"
-              GridPane.rowIndex="2"
-              GridPane.columnIndex="5"
-              />
-    <Label fx:id = "currentLives"
-           GridPane.rowIndex="3"
-           GridPane.columnIndex="5"
-            />
-    <Label fx:id = "timeLabel"
-           GridPane.rowIndex="0"
-           GridPane.columnIndex="6"
-           GridPane.columnSpan="2"
-           GridPane.rowSpan="2"
-           />
-</GridPane>
+<Pane prefHeight="800.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="game.engine.GameController">
+   <children>
+      <GridPane prefHeight="800.0" prefWidth="1280.0">
+        <columnConstraints>
+          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="960.0" />
+          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="320.0" />
+        </columnConstraints>
+        <rowConstraints>
+          <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+        </rowConstraints>
+         <children>
+            <Pane prefHeight="200.0" prefWidth="200.0">
+               <children>
+                  <Group fx:id="generalLayer" />
+               </children>
+            </Pane>
+            <GridPane id="bg_right_panel" alignment="BASELINE_RIGHT" hgap="10" maxHeight="800.0" maxWidth="320.0" minHeight="800.0" minWidth="320.0" vgap="10" GridPane.columnIndex="1">
+                      <padding>
+                  <Insets bottom="50.0" left="25.0" right="50.0" top="50.0" />
+               </padding>
+               <children>
+               
+                   <Button fx:id="buyTowerButton" onAction="#buyTower" prefHeight="80" prefWidth="80" GridPane.rowIndex="1" GridPane.rowSpan="4" />
+                   <Button fx:id="openMenuButton" onAction="#openMenu" prefHeight="80" prefWidth="80" GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.rowSpan="4" />
+               
+                   <Label fx:id="resourceLabel" text="Gold: " GridPane.columnIndex="4" GridPane.rowIndex="1" />
+                   <Label fx:id="levelLabel" text="Wave: " GridPane.columnIndex="4" GridPane.rowIndex="2" />
+                   <Label fx:id="livesLabel" text="Lives: " GridPane.columnIndex="4" GridPane.rowIndex="4" />
+                   <Label fx:id="scoreLabel" text="Score: " GridPane.columnIndex="4" GridPane.rowIndex="3" />
+                   <Label fx:id="currentResources" GridPane.columnIndex="5" GridPane.rowIndex="1" />
+                   <Label fx:id="currentLevel" GridPane.columnIndex="5" GridPane.rowIndex="2" />
+                   <Label fx:id="currentScore" GridPane.columnIndex="5" GridPane.rowIndex="3" />
+                   <Label fx:id="currentLives" GridPane.columnIndex="5" GridPane.rowIndex="4" />
+                   <Label fx:id="timeLabel" GridPane.columnIndex="6" GridPane.columnSpan="2" GridPane.rowIndex="1" GridPane.rowSpan="2" />
+                  <GridPane fx:id="targetTowerInfo" visible="false" GridPane.columnSpan="8" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
+                    <columnConstraints>
+                      <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                      <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                    </columnConstraints>
+                    <rowConstraints>
+                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                        <RowConstraints minHeight="-Infinity" valignment="TOP" />
+                        <RowConstraints minHeight="10.0" prefHeight="50.0" vgrow="SOMETIMES" />
+                    </rowConstraints>
+                     <children>
+                        <Label text="Attac" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER" />
+                        <Label fx:id="targetAttack" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="1" />
+                        <Label text="Range" GridPane.halignment="CENTER" GridPane.rowIndex="2" />
+                        <Label fx:id="targetRange" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="2" />
+                        <Label text="Speed" GridPane.halignment="CENTER" GridPane.rowIndex="3" />
+                        <Label fx:id="targetSpeed" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="3" />
+                        <Label fx:id="targetName" textAlignment="CENTER" GridPane.columnSpan="2" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
+                        <Button id="target_upgrade_button" fx:id="targetUpgradeButton" defaultButton="true" maxHeight="64.0" maxWidth="64.0" minHeight="64.0" minWidth="64.0" mnemonicParsing="false" GridPane.halignment="CENTER" GridPane.rowIndex="4" GridPane.valignment="CENTER">
+                           <GridPane.margin>
+                              <Insets bottom="10.0" top="10.0" />
+                           </GridPane.margin>
+                           <graphic>
+                              <Label fx:id="targetUpgradePrice" text="100" />
+                           </graphic>
+                        </Button>
+                        <Button id="target_sell_button" fx:id="targetSellButton" lineSpacing="1.0" maxHeight="64.0" maxWidth="64.0" minHeight="64.0" minWidth="64.0" mnemonicParsing="false" textAlignment="JUSTIFY" wrapText="true" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="4" GridPane.valignment="CENTER">
+                           <GridPane.margin>
+                              <Insets bottom="10.0" top="10.0" />
+                           </GridPane.margin>
+                           <graphic>
+                              <Label fx:id="targerSellPrice" alignment="BOTTOM_CENTER" text="100">
+                                 <effect>
+                                    <Lighting>
+                                       <bumpInput>
+                                          <Shadow />
+                                       </bumpInput>
+                                       <light>
+                                          <Light.Distant color="#a16363" />
+                                       </light>
+                                    </Lighting>
+                                 </effect>
+                              </Label>
+                           </graphic>
+                        </Button>
+                     </children>
+                  </GridPane>
+               </children>
+               <columnConstraints>
+                  <ColumnConstraints />
+                  <ColumnConstraints />
+                  <ColumnConstraints />
+                  <ColumnConstraints />
+                  <ColumnConstraints />
+                  <ColumnConstraints />
+                  <ColumnConstraints />
+                  <ColumnConstraints />
+               </columnConstraints>
+               <rowConstraints>
+                  <RowConstraints />
+                  <RowConstraints />
+                  <RowConstraints />
+                  <RowConstraints />
+                  <RowConstraints minHeight="10.0" prefHeight="30.0" />
+               </rowConstraints>
+            </GridPane>
+         </children>
+      </GridPane>
+   </children>
+</Pane>

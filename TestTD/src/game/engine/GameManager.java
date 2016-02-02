@@ -32,14 +32,19 @@ import java.util.Iterator;
  * creating or loading a game.
  */
 public class GameManager {
-    private  TileMap gameMap;                       // The painted map used as the backgrounds layer
-    private  Group monsterLayer;                    // Used for the monster graphics
-    private  GameState game;                        // Provides basic game states.
+	
+	private  GameState gameState;                        // Provides basic game states.    
+	
+	private  TileMap tileMap;  						// The painted map used as the backgrounds layer
+	
+    private  Group generalLayer;                    // Used for the monster graphics
+
     private  Scene gameScene;                       // The main viewport
     private  GameController gameController;         // Handles fxml attributes (buttons and labels)
     private  AnimationTimer gameLoop;               // Used for the gui thread
-	private Group tilemapGroup;
-	private Label hoverTower;
+	//private Group tilemapGroup;
+	
+	//private Label hoverTower;
     /**
      * Initializes the game
      *
@@ -47,16 +52,16 @@ public class GameManager {
      */
     public void initialize() throws java.io.IOException{
         // Initializes the game state
-        game = GameState.getNewGame();
-
+        gameState = GameState.getNewGame();
+/*
         // Generates the map with the given resolution
         gameMap = new TileMap(1280 ,800);
 
         // Creates gui hierarchy
         FXMLLoader loader = new FXMLLoader(MenuNavigator.GAMEUI);
+        
         StackPane gamePane = new StackPane();
         tilemapGroup = new Group();
-        
         monsterLayer = new Group();
         monsterLayer.getChildren().add(tilemapGroup);
         tilemapGroup.getChildren().add(gameMap);
@@ -68,35 +73,42 @@ public class GameManager {
         gameScene = new Scene(gamePane);
         gameScene.getStylesheets().add(GameManager.class.getResource("res/menu/gamestyle.css").toExternalForm());
         gameController = loader.<GameController>getController();
-        gameController.setGameManager(this);
+        gameController.setGameManager(this, game);
 
+*/
+        // Drawing image 
+        tileMap = new TileMap(1280 ,800);
+        // Creates gui hierarchy
+        FXMLLoader loader = new FXMLLoader(MenuNavigator.GAMEUI);
+        // Opens stream to get controller reference
+        Node gameUI = (Node)loader.load(MenuNavigator.GAMEUI.openStream()); 
+        gameController = loader.<GameController>getController();
+        gameController.setGameManager(this, gameState, tileMap);
+        // Generates the map with the given resolution
+        StackPane gamePane = new StackPane();
+        gamePane.getChildren().add(gameController.getGeneralLayout());
+    	
         
+       
+        gamePane.getChildren().add(gameUI);
+        gameScene = new Scene(gamePane);
+        gameScene.getStylesheets().add(GameManager.class.getResource("res/menu/gamestyle.css").toExternalForm());
+        
+        gameController.setListeners();
         
         MenuNavigator.stage.setScene(gameScene);
-        Monster.setPath(gameMap.getPath());
+        Monster.setPath(tileMap.getPath());
         startGameLoop();
         
-        
-        
-        hoverTower = new Label();
-        hoverTower.setPrefWidth(100);  
-        hoverTower.setPrefHeight(50); 
-        hoverTower.setLayoutX(40);
-        hoverTower.setLayoutY(40);
-        hoverTower.setId("my_label");
-        hoverTower.setText("OLOL");
-        tilemapGroup.getChildren().add(hoverTower);
+
     }
 
     public  Scene getGameScene(){
         return gameScene;
     }
     
-    public Label getView(){
-    	return hoverTower;
-    }
     public TileMap getMap(){
-    	return gameMap;
+    	return tileMap;
     }
 
 
@@ -115,12 +127,12 @@ public class GameManager {
         int yTile = (int)(yCords / 64);
 
         // Verify the node is not occupied
-        if(gameMap.nodeOpen(xTile,yTile)){
+        if(tileMap.nodeOpen(xTile,yTile)){
             // Verify the user can afford the tower
-            if(game.getResources() > 49) {
-                game.addTower(new Tower(xTile, yTile));
-                game.setResources(game.getResources() - 50);
-                gameMap.setMapNode(((int) (xCords / 64)), ((int) (yCords / 64)), 7);
+            if(gameState.getResources() > 49) {
+            	gameState.addTower(new Tower(xTile, yTile));
+            	gameState.setResources(gameState.getResources() - 50);
+                tileMap.setMapNode(((int) (xCords / 64)), ((int) (yCords / 64)), 7);
             }
         }
     }
@@ -138,14 +150,13 @@ public class GameManager {
     public Tower getTower(double xCords , double yCords){
         Coordinate clickedTiled = new Coordinate(xCords , yCords);
         // Find tower with matching coordinate
-        for(Tower tower : game.getPlayerTowers()){
+        for(Tower tower : gameState.getPlayerTowers()){
             if(tower.getCoords().equals(clickedTiled)){
                 return tower;
             }
         }
         return null;
     }
-
     /**
      * Upgrades a user tower. Pauses the tower attacker service
      * which is resumed after a set time.
@@ -168,8 +179,8 @@ public class GameManager {
      * the game progresses.
      */
     private void createMonster(int health){
-        game.getMonstersAlive().add(new Monster(health));
-        monsterLayer.getChildren().add(game.getMonstersAlive().get(game.getMonstersAlive().size() - 1).getView());
+    	gameState.getMonstersAlive().add(new Monster(health));
+        gameController.getGeneralLayout().getChildren().add(gameState.getMonstersAlive().get(gameState.getMonstersAlive().size() - 1).getView());
     }
 
     /**
@@ -177,8 +188,8 @@ public class GameManager {
      * monsters which reach the end of the path.
      */
     private void updateLocations(){
-        if(!game.getMonstersAlive().isEmpty()){
-            Iterator<Monster> monsters = game.getMonstersAlive().iterator();
+        if(!gameState.getMonstersAlive().isEmpty()){
+            Iterator<Monster> monsters = gameState.getMonstersAlive().iterator();
             Monster monster;
             while(monsters.hasNext()) {
                 monster = monsters.next();
@@ -197,7 +208,7 @@ public class GameManager {
     private void createProjectiles(){
         Path projectilePath;
         PathTransition animation;
-        for(Tower tower : game.getPlayerTowers()){
+        for(Tower tower : gameState.getPlayerTowers()){
             for(Projectile projectile : tower.getProjectileList()){
                 // Create animation path
                 projectilePath = new Path(new MoveTo(projectile.getStartX() , projectile.getStartY()));
@@ -213,7 +224,7 @@ public class GameManager {
 
                         // Hide and remove from gui
                         finishedProjectile.setVisible(false);
-                        monsterLayer.getChildren().remove(finishedProjectile);
+                        gameController.getGeneralLayout().getChildren().remove(finishedProjectile);
 
                         // Remove monster if they are dead
                         if(finishedProjectile.getTarget().isDead()){
@@ -221,7 +232,7 @@ public class GameManager {
                         }
                     }
                 });
-                monsterLayer.getChildren().add(projectile);
+                gameController.getGeneralLayout().getChildren().add(projectile);
                 animation.play();
             }
             tower.getProjectileList().clear();
@@ -238,12 +249,19 @@ public class GameManager {
      */
     private void updateLabels(int timer){
             gameController.updateLabels(
-                Integer.toString(game.getLevel()) ,
-                Integer.toString(game.getLives()) ,
-                Integer.toString(game.getResources()) ,
-                Integer.toString(game.getScore()) ,
+                Integer.toString(gameState.getLevel()) ,
+                Integer.toString(gameState.getLives()) ,
+                Integer.toString(gameState.getResources()) ,
+                Integer.toString(gameState.getScore()) ,
                 Integer.toString(timer)
         );
+            if (gameState.getTarget() != null){
+            	gameController.updateTarget(
+	            	Integer.toString(gameState.getTarget().getAttackDamage()),
+	                Integer.toString(gameState.getTarget().getAttackRange()),
+	                Double.toString(gameState.getTarget().getAttackSpeed())
+	            );
+            }
     }
 
 
@@ -253,7 +271,7 @@ public class GameManager {
      */
     public void stopGame(){
         pauseGame();
-        game.setState(GameState.IS_STOPPED);
+        gameState.setState(GameState.IS_STOPPED);
         gameLoop.stop();
     }
 
@@ -262,14 +280,14 @@ public class GameManager {
      * game is stopped.
      */
     public void pauseGame(){
-        game.setState(GameState.IS_PAUSED);
+    	gameState.setState(GameState.IS_PAUSED);
     }
     /**
      * Called when the game is started or the
      * game returns from a paused state.
      */
     public void resumeGame(){
-        game.setState(GameState.IS_RUNNING);
+    	gameState.setState(GameState.IS_RUNNING);
     }
 
 
@@ -284,17 +302,17 @@ public class GameManager {
     private synchronized void removeMonster(Monster monster){
         // Punish player
         if (monster.isPathFinished()){
-            game.setLives((game.getLives()) - 1);
+        	gameState.setLives((gameState.getLives()) - 1);
         }
         // Reward player
         else{
-            game.setResources((game.getResources()) + monster.getReward());
-            game.setScore(game.getScore() + (monster.getReward() * game.getLevel()));
+        	gameState.setResources((gameState.getResources()) + monster.getReward());
+        	gameState.setScore(gameState.getScore() + (monster.getReward() * gameState.getLevel()));
         }
 
         // Remove monsters graphic and reference
         monster.getView().setVisible(false);
-        game.getMonstersAlive().remove(monster);
+        gameState.getMonstersAlive().remove(monster);
 
     }
 
@@ -320,7 +338,7 @@ public class GameManager {
                         createMonster(3);
                     }
                     else if(timer <= 0){
-                        game.setLevel(game.getLevel() + 1);
+                    	gameState.setLevel(gameState.getLevel() + 1);
                         timer = 30;
                     }
                 }

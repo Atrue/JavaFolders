@@ -26,7 +26,7 @@ public class GameState implements Serializable{
     private int lives;;                     //numbers of monster escapes allowed before game ends
     private ArrayList<Tower> playerTowers;  //holds all tower references on the map
     private ArrayList<Monster> monstersAlive; //holds monster references
-
+    private Tower target = null;
 
     //CONSTRUCTORS
     private GameState(){
@@ -66,7 +66,9 @@ public class GameState implements Serializable{
     public void setState(int state) {
         this.state = state;
     }
-
+    public void setTarget(Tower tower){
+    	this.target = tower;
+    }
     //GETTERS
     public int getResources(){
         return resources;
@@ -82,6 +84,9 @@ public class GameState implements Serializable{
     }
     public int getState() {
         return state;
+    }
+    public Tower getTarget(){
+    	return this.target;
     }
 
     public boolean isPaused(){

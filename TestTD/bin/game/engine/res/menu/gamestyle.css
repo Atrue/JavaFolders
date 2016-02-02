@@ -16,12 +16,29 @@
 #timeLabel{
     -fx-font-size: 20;
 }
+#bg_right_panel{
+	-fx-background-color:rgb(215,207,182);
+}
+#target_upgrade_button{
+	-fx-background-image: url('icon/sell_icon_unselected.png');
+    -fx-background-repeat: no-repeat;
+    -fx-background-position: center;
+}
+#target_sell_button{
+	-fx-background-image: url('icon/sell_icon_unselected.png');
+    -fx-background-repeat: no-repeat;
+    -fx-background-position: center;
+}
+
+
 
 #my_label{ 
--fx-background-color: #0f8dd9; 
+-fx-background-color: rgba(0,0,1,0.4);
+-fx-background-image: url('icon/BUY_ICON.png'); 
 } 
 #my_label_selected{ 
--fx-background-color: #1a4d71; 
+-fx-background-image: url('icon/BUY_ICON.png');
+-fx-background-color: rgba(1,0,0,0.4); 
 -fx-border-color: rgba(0, 0, 0, 0.4); 
 -fx-border-width: 1; 
 } 
