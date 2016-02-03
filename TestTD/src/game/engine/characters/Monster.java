@@ -98,6 +98,8 @@ public class Monster {
     public void updateLocation(int distance){
 
         // Move along the x axis
+    	
+    	
         if(moveX){
             view.setCenterX(view.getCenterX() + distance);
             // Reached a changing point in path , switch direction

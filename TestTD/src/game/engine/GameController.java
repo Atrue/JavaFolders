@@ -19,6 +19,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.shape.Circle;
 
 public class GameController {
 
@@ -34,8 +35,6 @@ public class GameController {
     private Label targetName;
     @FXML
     private Button buyTowerButton;
-    @FXML
-    private Group generalLayer;
     @FXML
     private Label currentScore;
     @FXML
@@ -69,6 +68,10 @@ public class GameController {
     @FXML
     private Label timeLabel;
 
+   
+    @FXML
+    private Pane ongrouppane;
+    
     private GameManager gameManager; //for pause game. Can be deleted
     private GameState gameState;
     
@@ -82,7 +85,6 @@ public class GameController {
         assert targetSpeed != null : "fx:id=\"targetSpeed\" was not injected: check your FXML file 'gameui.fxml'.";
         assert targetName != null : "fx:id=\"targetName\" was not injected: check your FXML file 'gameui.fxml'.";
         assert buyTowerButton != null : "fx:id=\"buyTowerButton\" was not injected: check your FXML file 'gameui.fxml'.";
-        assert generalLayer != null : "fx:id=\"generalLayer\" was not injected: check your FXML file 'gameui.fxml'.";
         assert currentScore != null : "fx:id=\"currentScore\" was not injected: check your FXML file 'gameui.fxml'.";
         assert targetUpgradePrice != null : "fx:id=\"targetUpgradePrice\" was not injected: check your FXML file 'gameui.fxml'.";
         assert targetAttack != null : "fx:id=\"targetAttack\" was not injected: check your FXML file 'gameui.fxml'.";
@@ -114,15 +116,32 @@ public class GameController {
         hoverTower.setText("OLOL");
         hoverTower.setVisible(false);
 
+        
+        Group g = new Group();
+        g.getChildren().add(imageview);
+        g.getChildren().add(hoverTower);
+        ongrouppane.getChildren().add(g);
+        		
+        		
+        //ongrouppane.getChildren().add(imageview);
+        //generalLayer.getChildren().add(hoverTower);
+        
+        /*
+        //generalLayer.setTranslateX(-160);
+        System.out.println(generalLayer.getLayoutX()+"|"+generalLayer.getTranslateX()+"|"+generalLayer.getScaleX());
+        
+        generalLayer = new Group();
         generalLayer.getChildren().add(imageview);
+        System.out.println(imageview.getFitWidth()+"|"+imageview.getLayoutX()+"|"+imageview.getX()+"|"+imageview.getTranslateX()+"|"+imageview.getScaleX());
         generalLayer.getChildren().add(hoverTower);
+        */
     }
     public void setListeners(){
         gameManager.getGameScene().setOnMouseClicked(new buyTower());
         gameManager.getGameScene().setOnMouseMoved(new MouseMove());
     }
-    public Group getGeneralLayout(){
-    	return this.generalLayer;
+    public Pane getGeneralLayout(){
+    	return this.ongrouppane;
     }
     
     //set mouse clicks to buy and place tower

@@ -77,7 +77,7 @@ public class GameManager {
 
 */
         // Drawing image 
-        tileMap = new TileMap(1280 ,800);
+        tileMap = new TileMap(960 ,800);
         // Creates gui hierarchy
         FXMLLoader loader = new FXMLLoader(MenuNavigator.GAMEUI);
         // Opens stream to get controller reference
@@ -189,15 +189,23 @@ public class GameManager {
      */
     private void updateLocations(){
         if(!gameState.getMonstersAlive().isEmpty()){
+        	
+        	ArrayList<Monster> m = new ArrayList<>();
+        	
             Iterator<Monster> monsters = gameState.getMonstersAlive().iterator();
             Monster monster;
             while(monsters.hasNext()) {
                 monster = monsters.next();
                 monster.updateLocation(1);
                 if(monster.isPathFinished()){
-                    removeMonster(monster);
+                	m.add(monster);
+                	//removeMonster(monster);
                 }
             }
+            for(Monster mo:m){
+            	removeMonster(mo);
+            }
+            
         }
     }
 
@@ -299,7 +307,7 @@ public class GameManager {
      * @param monster
      * The monster to remove from the game.
      */
-    private synchronized void removeMonster(Monster monster){
+    private void removeMonster(Monster monster){
         // Punish player
         if (monster.isPathFinished()){
         	gameState.setLives((gameState.getLives()) - 1);
