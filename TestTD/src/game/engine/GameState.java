@@ -1,5 +1,7 @@
 package game.engine;
 
+import game.engine.characters.Levels;
+
 /*
     keeps track of the games state, only one state
     can be active at a time
@@ -26,6 +28,7 @@ public class GameState implements Serializable{
     private int lives;;                     //numbers of monster escapes allowed before game ends
     private ArrayList<Tower> playerTowers;  //holds all tower references on the map
     private ArrayList<Monster> monstersAlive; //holds monster references
+    private Levels levels;
     private Tower target = null;
 
     //CONSTRUCTORS
@@ -69,6 +72,9 @@ public class GameState implements Serializable{
     public void setTarget(Tower tower){
     	this.target = tower;
     }
+    public void setLevels(Levels l){
+    	this.levels = l;
+    }
     //GETTERS
     public int getResources(){
         return resources;
@@ -87,6 +93,9 @@ public class GameState implements Serializable{
     }
     public Tower getTarget(){
     	return this.target;
+    }
+    public Levels getLevels(){
+    	return this.levels;
     }
 
     public boolean isPaused(){

@@ -144,13 +144,14 @@ public class GameController {
     	return this.ongrouppane;
     }
     
+    
     //set mouse clicks to buy and place tower
     public void buyTower(){
         hoverState = !hoverState;
         hoverTower.setVisible(hoverState);
     }
     public void openMenu(){
-        gameManager.pauseGame();
+        gameManager.openMenu();
         //open Game Menu
     }
     public void updateLabels(String currentLevel , String currentLives , String currentResources , String currentScore , String timeLabel){

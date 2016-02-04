@@ -1,30 +1,31 @@
 package game.engine;
 
 
+import java.util.ArrayList;
+import java.util.Iterator;
+
 import game.MenuNavigator;
+import game.engine.characters.Levels;
 import game.engine.characters.Monster;
 import game.engine.characters.Projectile;
 import game.engine.characters.Tower;
 import javafx.animation.AnimationTimer;
+import javafx.animation.KeyFrame;
 import javafx.animation.PathTransition;
+import javafx.animation.Timeline;
 import javafx.beans.property.LongProperty;
 import javafx.beans.property.SimpleLongProperty;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
 import javafx.util.Duration;
-
-import java.util.ArrayList;
-import java.util.Iterator;
 
 /**
  * Responsible for all communications between user interface and underlying
@@ -34,13 +35,18 @@ import java.util.Iterator;
 public class GameManager {
 	
 	private  GameState gameState;                        // Provides basic game states.    
+	private  GameController gameController;			// Handles fxml attributes (buttons and labels)
+	private Scheduler timer;
+	
+	
+	private int FPS = 30;
 	
 	private  TileMap tileMap;  						// The painted map used as the backgrounds layer
 	
     private  Group generalLayer;                    // Used for the monster graphics
 
     private  Scene gameScene;                       // The main viewport
-    private  GameController gameController;         // Handles fxml attributes (buttons and labels)
+             
     private  AnimationTimer gameLoop;               // Used for the gui thread
 	//private Group tilemapGroup;
 	
@@ -53,6 +59,8 @@ public class GameManager {
     public void initialize() throws java.io.IOException{
         // Initializes the game state
         gameState = GameState.getNewGame();
+        
+        
 /*
         // Generates the map with the given resolution
         gameMap = new TileMap(1280 ,800);
@@ -98,11 +106,17 @@ public class GameManager {
         
         MenuNavigator.stage.setScene(gameScene);
         Monster.setPath(tileMap.getPath());
+        
+        Levels levels = new Levels(this);
+        gameState.setLevels(levels);
+        
         startGameLoop();
         
 
     }
-
+    public GameState getGameState(){
+    	return gameState;
+    }
     public  Scene getGameScene(){
         return gameScene;
     }
@@ -110,83 +124,15 @@ public class GameManager {
     public TileMap getMap(){
     	return tileMap;
     }
-
-
-    /**
-     * Attempts to create a tower at the tile clicked on
-     * by the user.
-     *
-     * @param xCords
-     * The clicked x coordinate
-     * @param yCords
-     * The clicked y coordinate
-     */
-    public void buyTower(double xCords , double yCords){
-        // Convert the clicked coordinates to a tile coordinate
-        int xTile = (int)(xCords / 64);
-        int yTile = (int)(yCords / 64);
-
-        // Verify the node is not occupied
-        if(tileMap.nodeOpen(xTile,yTile)){
-            // Verify the user can afford the tower
-            if(gameState.getResources() > 49) {
-            	gameState.addTower(new Tower(xTile, yTile));
-            	gameState.setResources(gameState.getResources() - 50);
-                tileMap.setMapNode(((int) (xCords / 64)), ((int) (yCords / 64)), 7);
-            }
-        }
+    public int getFPS(){
+    	return FPS;
     }
-
+    
     /**
-     * Gets the tower at a specific coordinate
-     *
-     * @param xCords
-     * The clicked x coordinate passed from the controller
-     * @param yCords
-     * The clicked y coordinate passed from the controller
-     * @return
-     * The tower clicked or null if none exist
+     * 
+     * PRIVATE UPDATED
      */
-    public Tower getTower(double xCords , double yCords){
-        Coordinate clickedTiled = new Coordinate(xCords , yCords);
-        // Find tower with matching coordinate
-        for(Tower tower : gameState.getPlayerTowers()){
-            if(tower.getCoords().equals(clickedTiled)){
-                return tower;
-            }
-        }
-        return null;
-    }
-    /**
-     * Upgrades a user tower. Pauses the tower attacker service
-     * which is resumed after a set time.
-     *
-     * @param tower
-     * Tower selected for the upgrade.
-     */
-    public void upgradeTower(Tower tower){
-        tower.getTowerAttacker().cancel();
-        tower.upgradeTower();
-        tower.getTowerAttacker().pollTower(tower.getUpgradeTime());
-    }
-
-
-    /**
-     * Creates a monster.
-     *
-     * @param health
-     * The health points for the monster. Increases as
-     * the game progresses.
-     */
-    private void createMonster(int health){
-    	gameState.getMonstersAlive().add(new Monster(health));
-        gameController.getGeneralLayout().getChildren().add(gameState.getMonstersAlive().get(gameState.getMonstersAlive().size() - 1).getView());
-    }
-
-    /**
-     * Updates monsters location on the path and removes any
-     * monsters which reach the end of the path.
-     */
+  //inner update for monster
     private void updateLocations(){
         if(!gameState.getMonstersAlive().isEmpty()){
         	
@@ -208,11 +154,7 @@ public class GameManager {
             
         }
     }
-
-    /**
-     * Checks all towers for created projectiles which are then created
-     * and animated by the main game loop.
-     */
+    // inner update for towers
     private void createProjectiles(){
         Path projectilePath;
         PathTransition animation;
@@ -247,14 +189,7 @@ public class GameManager {
         }
 
     }
-
-
-    /**
-     * Updates the labels associated with the game state
-     *
-     * @param timer
-     * Time before the next wave of monsters will be spawned.
-     */
+    // inner update for controller
     private void updateLabels(int timer){
             gameController.updateLabels(
                 Integer.toString(gameState.getLevel()) ,
@@ -271,31 +206,72 @@ public class GameManager {
 	            );
             }
     }
-
-
     /**
-     * Stops the game. Used when the player chooses to quit
-     * or the losing conditions are met.
+     * MAIN UPDATE
      */
-    public void stopGame(){
-        pauseGame();
-        gameState.setState(GameState.IS_STOPPED);
-        gameLoop.stop();
+    public void update(){
+    	updateLocations();
+    	createProjectiles();
+    	updateLabels(timer.getGameTime());
+    	gameState.getLevels().update();
+    }
+    // level up
+    public void levelUp(){
+    	gameState.setLevel(gameState.getLevel() + 1);
+    	gameState.getLevels().nextWave();
+    }
+    // buy tower;
+    public void buyTower(double xCords , double yCords){
+        // Convert the clicked coordinates to a tile coordinate
+        int xTile = (int)(xCords / 64);
+        int yTile = (int)(yCords / 64);
+
+        // Verify the node is not occupied
+        if(tileMap.nodeOpen(xTile,yTile)){
+            // Verify the user can afford the tower
+            if(gameState.getResources() > 49) {
+            	gameState.addTower(new Tower(xTile, yTile));
+            	gameState.setResources(gameState.getResources() - 50);
+                tileMap.setMapNode(((int) (xCords / 64)), ((int) (yCords / 64)), 7);
+            }
+        }
+    }
+    // get tower by coords
+    public Tower getTower(double xCords , double yCords){
+        Coordinate clickedTiled = new Coordinate(xCords , yCords);
+        // Find tower with matching coordinate
+        for(Tower tower : gameState.getPlayerTowers()){
+            if(tower.getCoords().equals(clickedTiled)){
+                return tower;
+            }
+        }
+        return null;
+    }
+    //??
+    public void upgradeTower(Tower tower){
+        tower.getTowerAttacker().cancel();
+        tower.upgradeTower();
+        tower.getTowerAttacker().pollTower(tower.getUpgradeTime());
     }
 
-    /**
-     * Used to freeze the game and is called before the
-     * game is stopped.
-     */
-    public void pauseGame(){
-    	gameState.setState(GameState.IS_PAUSED);
+
+    // add monster
+    public void createMonster(Monster monster){
+    	gameState.addMonster(monster);
+        gameController.getGeneralLayout().getChildren().add(monster.getView());
     }
-    /**
-     * Called when the game is started or the
-     * game returns from a paused state.
-     */
-    public void resumeGame(){
-    	gameState.setState(GameState.IS_RUNNING);
+
+    
+
+    
+    public void openMenu(){
+    	if (gameState.getState() == gameState.IS_PAUSED){
+    		gameState.setState(gameState.IS_RUNNING);
+    		timer.start();
+    	}else{
+    		gameState.setState(gameState.IS_PAUSED);
+    		timer.stop();
+    	}
     }
 
 
@@ -331,6 +307,10 @@ public class GameManager {
      * animations and updating monster locations.
      */
     private void startGameLoop() {
+    	
+    	timer = new Scheduler(this);
+    	timer.start();
+    	/*
         final LongProperty secondUpdate = new SimpleLongProperty(0);
         final LongProperty fpstimer = new SimpleLongProperty(0);
         final AnimationTimer timer = new AnimationTimer() {
@@ -361,6 +341,7 @@ public class GameManager {
         };
         gameLoop = timer;
         timer.start();
+        */
     }
 
 }

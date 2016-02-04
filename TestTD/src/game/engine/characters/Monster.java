@@ -41,7 +41,12 @@ public class Monster {
         view = new Circle(path.get(0).getExactX() , path.get(0).getExactY() , radius);
         view.setFill(Color.RED);
     }
-
+    public static Monster copy(Monster from){
+    	Monster to = new Monster(3);
+    	to.reward = from.reward;
+    	to.movementSpeed = from.movementSpeed;
+    	return to;
+    }
 
     public int getX(){
         return ((int)view.getCenterX());
