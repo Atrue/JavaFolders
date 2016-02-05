@@ -1,5 +1,7 @@
 package game.engine.characters;
 
+import java.util.ArrayList;
+
 /**
  * Monsters are the enemies of the player. They're job is to traverse
  * the path. They are created during timed intervals and removed when
@@ -7,22 +9,30 @@ package game.engine.characters;
  */
 
 import game.engine.Coordinate;
+import game.engine.GameState;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.Label;
+import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
-
-import java.util.ArrayList;
+import javafx.scene.shape.Rectangle;
 
 public class Monster {
     private static ArrayList<Coordinate> path;  // Used by all monsters for pathing
+    private static Pane parentView;
+    
     private Circle view;                        // Graphical view of monster
     private final int radius = 10;              // Graphical size of monster
-    private int healthPoints;                   // Determines if the monster is still alive
+    private double maxHP=3;
+    private double healthPoints;                   // Determines if the monster is still alive
     private int movementSpeed;                  // Determines time to complete path
     private int reward;                         // Monster death will trigger a resource reward
     private int nodeDirection;                  // Used for guiding the monster on the path
     private boolean moveX;                      // Used for monster pathing
     private boolean isDead;                     // Flag is signal monster removal
     private boolean pathFinished;               // Signals the monster finished the path alive.
+	private Rectangle HPview;
 
     /**
      * Monster initialization
@@ -35,11 +45,20 @@ public class Monster {
         pathFinished = false;
         moveX = true;
         nodeDirection = 1;
+        maxHP = healthPoints;
         this.healthPoints = healthPoints;
         movementSpeed = 1;
         reward = 2;
         view = new Circle(path.get(0).getExactX() , path.get(0).getExactY() , radius);
         view.setFill(Color.RED);
+        
+        HPview = new Rectangle(20, 5);
+        HPview.setFill(Color.color(0, 1, 0));
+        HPview.setX(path.get(0).getExactX() - 10);
+        HPview.setY(path.get(0).getExactY() - 25);
+    }
+    public static void setParentView(Pane v){
+    	parentView = v;
     }
     public static Monster copy(Monster from){
     	Monster to = new Monster(3);
@@ -47,7 +66,20 @@ public class Monster {
     	to.movementSpeed = from.movementSpeed;
     	return to;
     }
-
+    
+    public void add(){
+    	parentView.getChildren().add(view);
+    	parentView.getChildren().add(HPview);
+    }
+    public void remove(){
+    	parentView.getChildren().remove(view);
+    	parentView.getChildren().remove(HPview);
+    	view.setVisible(false);
+    	HPview.setVisible(false);
+    }
+    public Rectangle getHPView(){
+    	return HPview;
+    }
     public int getX(){
         return ((int)view.getCenterX());
     }
@@ -86,11 +118,19 @@ public class Monster {
      * The damage comes from the attacking tower which signals how
      * much health points are deduced from the monster.
      */
-    public void takeDamage(int damage){
+    public void takeDamage(double damage){
         healthPoints = healthPoints - damage;
         if (healthPoints <= 0){
             isDead = true;
             pathFinished = false;
+            
+            GameState.getMonstersAlive().remove(this);
+            remove();
+            
+        }else{
+        	double kHP = healthPoints / maxHP;
+        	HPview.setWidth(20 * kHP);
+        	HPview.setFill(Color.color(1 - kHP, kHP, 0));
         }
     }
 
@@ -107,6 +147,7 @@ public class Monster {
     	
         if(moveX){
             view.setCenterX(view.getCenterX() + distance);
+            HPview.setX(HPview.getX() + distance);
             // Reached a changing point in path , switch direction
             if(view.getCenterX() == path.get(nodeDirection).getExactX()){
                 moveX = false;
@@ -122,9 +163,11 @@ public class Monster {
         else{
             if(view.getCenterY() < path.get(nodeDirection).getExactY()) {
                 view.setCenterY(view.getCenterY() + distance);
+                HPview.setY(HPview.getY() + distance);
             }
             else{
                 view.setCenterY(view.getCenterY() - distance);
+                HPview.setY(HPview.getY() - distance);
             }
             // Reach changing point , switch direction
             if(view.getCenterY() == path.get(nodeDirection).getExactY()){

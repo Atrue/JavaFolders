@@ -9,6 +9,7 @@ package game.engine;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import game.engine.characters.Monster;
 import game.engine.characters.Tower;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -73,7 +74,6 @@ public class GameController {
     private Pane ongrouppane;
     
     private GameManager gameManager; //for pause game. Can be deleted
-    private GameState gameState;
     
     
     private boolean hoverState = false;
@@ -103,9 +103,11 @@ public class GameController {
         assert timeLabel != null : "fx:id=\"timeLabel\" was not injected: check your FXML file 'gameui.fxml'.";
         
     }
-    public void setGameManager(GameManager gameManager, GameState gameState, ImageView imageview){
-        this.gameManager = gameManager;
-        this.gameState = gameState;       
+    public void setGameManager(GameManager gameManager){
+        this.gameManager = gameManager;  
+        
+        
+        
         
         hoverTower = new Label();
         hoverTower.setPrefWidth(64);  
@@ -118,7 +120,7 @@ public class GameController {
 
         
         Group g = new Group();
-        g.getChildren().add(imageview);
+        g.getChildren().add(GameState.getMap());
         g.getChildren().add(hoverTower);
         ongrouppane.getChildren().add(g);
         		
@@ -179,10 +181,10 @@ public class GameController {
             }else{
             	Tower tower = gameManager.getTower(me.getX(), me.getY());
             	if (tower != null){
-            		gameState.setTarget(tower);
+            		GameState.setTarget(tower);
             		targetTowerInfo.setVisible(true);
             	}else{
-            		gameState.setTarget(null);
+            		GameState.setTarget(null);
             		targetTowerInfo.setVisible(false);
             		
             	}
@@ -195,7 +197,7 @@ public class GameController {
         	if (hoverState){
         		int xTile = (int)(me.getX() / 64);
         		int yTile = (int)(me.getY() / 64);
-        		if(gameManager.getMap().nodeOpen(xTile,yTile)){
+        		if(GameState.getMap().nodeOpen(xTile,yTile)){
         			hoverTower.setId("my_label");
         		}else{
         			hoverTower.setId("my_label_selected");

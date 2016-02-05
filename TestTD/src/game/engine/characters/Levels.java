@@ -56,7 +56,7 @@ public class Levels {
 		}
 		public void update(double tostart){
 			if (lastAdded > 0){
-				lastAdded-= 1./getFPS();
+				lastAdded-= getTick();
 				if (lastAdded < 0)
 					lastAdded = 0;
 			}else{
@@ -72,8 +72,8 @@ public class Levels {
 		public int getLost(){
 			return count;
 		}
-		public int getFPS(){
-			return parent.getFPS();
+		public double getTick(){
+			return 1./GameState.getFPS();
 		}
 		public Monster getMonster(){
 			if (count > 0){
