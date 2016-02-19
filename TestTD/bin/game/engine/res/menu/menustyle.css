@@ -1,20 +1,29 @@
 .root {
--fx-background-color: "GRAY";
+-fx-background-image: url('icon/tet_pol32.png');
+-fx-background-size: 100% 32px;
 }
 
-.button {
-    -fx-text-fill: white;
+.button
+{
+	-fx-text-fill: white;
     -fx-font-weight: bold;
-    -fx-background-color: linear-gradient(#444444, #777777);
-    -fx-border-color: white;
-    -fx-border-width: 1;
+	-fx-background-color: none;
+	-fx-border-width: 0px;
+	-fx-background-image: url('icon/border_button_2.png');
+	-fx-background-repeat: no-repeat;
+	-fx-background-size: 100%;
+	-fx-background-position: center;
+	
 }
-.button:hover {
-    -fx-background-color: linear-gradient(#777777, #444444);
+.button:hover
+{
+	-fx-background-image: url('icon/border_button_2_hover.png');
+	
 }
 
 #tdlabel {
-    -fx-font-size: 40px;
+    -fx-font-size: 50px;
+    -fx-text-fill: rgb(28,58,166);
     -fx-font-family: "Arial Black";
 }
 

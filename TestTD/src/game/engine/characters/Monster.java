@@ -1,6 +1,7 @@
 package game.engine.characters;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
 /**
  * Monsters are the enemies of the player. They're job is to traverse
@@ -9,30 +10,33 @@ import java.util.ArrayList;
  */
 
 import game.engine.Coordinate;
+import game.engine.GameManager;
 import game.engine.GameState;
-import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
 
 public class Monster {
-    private static ArrayList<Coordinate> path;  // Used by all monsters for pathing
-    private static Pane parentView;
+	private static Pane parentView;
+	private static GameManager parent;
     
-    private Circle view;                        // Graphical view of monster
-    private final int radius = 10;              // Graphical size of monster
-    private double maxHP=3;
-    private double healthPoints;                   // Determines if the monster is still alive
-    private int movementSpeed;                  // Determines time to complete path
-    private int reward;                         // Monster death will trigger a resource reward
-    private int nodeDirection;                  // Used for guiding the monster on the path
-    private boolean moveX;                      // Used for monster pathing
-    private boolean isDead;                     // Flag is signal monster removal
-    private boolean pathFinished;               // Signals the monster finished the path alive.
-	private Rectangle HPview;
+	private ArrayList<Buff> buffList = new ArrayList<>();
+    private Label view;                        // Graphical view of monster
+    private Rectangle HPview;
+    
+    private int type;
+    private double maxHP;
+    private double curHP;                   // Determines if the monster is still alive
+    private double maxSpeed;                  // Determines time to complete path
+    private double curSpeed;
+    private double reward;                         // Monster death will trigger a resource reward
+    
+    private double x;
+    private double y;
+	private boolean hasDirection;
+	private Coordinate nextPoint;
 
     /**
      * Monster initialization
@@ -41,76 +45,100 @@ public class Monster {
      * The health points increase as the game progresses to increase
      * the difficulty for the player.
      */
-    public Monster(int healthPoints){
-        pathFinished = false;
-        moveX = true;
-        nodeDirection = 1;
-        maxHP = healthPoints;
-        this.healthPoints = healthPoints;
-        movementSpeed = 1;
-        reward = 2;
-        view = new Circle(path.get(0).getExactX() , path.get(0).getExactY() , radius);
-        view.setFill(Color.RED);
+    public Monster(double hp, double speed, double kGold, int t){
+        maxHP = hp;
+        curHP = maxHP;
+        maxSpeed = speed;
+        curSpeed = maxSpeed;
+        type = t;
         
-        HPview = new Rectangle(20, 5);
-        HPview.setFill(Color.color(0, 1, 0));
-        HPview.setX(path.get(0).getExactX() - 10);
-        HPview.setY(path.get(0).getExactY() - 25);
+        reward = kGold;
+        
+    }
+    public static void init(GameManager gstate){
+    	parent = gstate;
     }
     public static void setParentView(Pane v){
     	parentView = v;
     }
     public static Monster copy(Monster from){
-    	Monster to = new Monster(3);
-    	to.reward = from.reward;
-    	to.movementSpeed = from.movementSpeed;
+    	Monster to = new Monster(from.maxHP, from.maxSpeed, from.reward, from.type);
     	return to;
     }
     
     public void add(){
+        x = GameState.getStartCord().getExactX();
+        y = GameState.getStartCord().getExactY();
+        view = new Label("z");
+        String style = "";
+        if (type == 1){
+        	style = "-fx-font-style:italic;";
+        }else if(type == 2){
+        	style = "-fx-font-weight:bold;";
+        }
+        
+        view.setStyle(style);
+        view.setFont(new Font(30));
+        view.setLayoutX(x-10);
+        view.setLayoutY(y-25);
+        view.setPrefHeight(32);
+        view.setPrefWidth(32);        
+        
+        HPview = new Rectangle(20, 5);
+        HPview.setFill(Color.color(0, 1, 0));
+        HPview.setX(x - 16);
+        HPview.setY(y - 16);
+    	
     	parentView.getChildren().add(view);
     	parentView.getChildren().add(HPview);
     }
-    public void remove(){
+    public void remove(boolean isKilled){
+    	
     	parentView.getChildren().remove(view);
     	parentView.getChildren().remove(HPview);
     	view.setVisible(false);
     	HPview.setVisible(false);
+    	parent.removeMonster(this, isKilled);
     }
     public Rectangle getHPView(){
     	return HPview;
     }
-    public int getX(){
-        return ((int)view.getCenterX());
+    public double getX(){
+        return x;
     }
-    public int getY(){
-        return ((int)view.getCenterY());
+    public double getY(){
+        return y;
+    }
+    public void setX(double x){
+    	this.x = x;
+    	view.setLayoutX(x - 10);
+        HPview.setX(x - 10);
+    }
+    public void setY(double y){
+    	this.y = y;
+    	view.setLayoutY(y-25);
+        HPview.setY(y-16);
     }
     public int getReward(){
-        return reward;
+        return (int)reward;
     }
-    public Circle getView(){
+    public Label getView(){
         return view;
     }
-    public boolean isDead(){
-        return isDead;
+    public void powWith(double koef){
+    	//reward *= 1+koef/25.;
+    	maxHP *= koef;
+    	reward = Math.pow(maxHP, 0.6);
+    	curHP = maxHP;
     }
-
-    public boolean isPathFinished(){
-        return pathFinished;
+    public int getTileX(){
+    	//return (int)((x-16)/32);
+    	return (int)(x/32);
     }
-
-    /**
-     * Sets the path that all monsters will travel upon.
-     *
-     * @param pathSet
-     * The path created by the Tilemap which is used by all monsters
-     * and set during the game's initialization phase.
-     */
-    public static void setPath(ArrayList<Coordinate> pathSet){
-        path = pathSet;
+    public int getTileY(){
+    	//return (int)((y+15)/32);
+    	return (int)(y/32);
     }
-    
     /**
      * Reduces the monster's health points
      *
@@ -118,68 +146,92 @@ public class Monster {
      * The damage comes from the attacking tower which signals how
      * much health points are deduced from the monster.
      */
+    public void slow(double k){
+    	double ns = maxSpeed *(1-k);
+    	if (ns < curSpeed)
+    		curSpeed = ns;
+    }
     public void takeDamage(double damage){
-        healthPoints = healthPoints - damage;
-        if (healthPoints <= 0){
-            isDead = true;
-            pathFinished = false;
+        curHP = curHP - damage;
+        if (curHP <= 0){
             
-            GameState.getMonstersAlive().remove(this);
-            remove();
+            remove(true);
             
         }else{
-        	double kHP = healthPoints / maxHP;
+        	double kHP = curHP / maxHP;
         	HPview.setWidth(20 * kHP);
         	HPview.setFill(Color.color(1 - kHP, kHP, 0));
         }
     }
-
+    public void addBuff(Buff b){
+    	Buff buff = Buff.copy(b);
+    	buff.setTarget(this);
+    	buffList.add(buff);
+    }
+    public boolean hasDirection(){
+    	int dir = GameState.getDirection(getTileX(), getTileY());
+    	return (dir >= -8 && dir < 0) || (dir == 5);
+    }
+    public boolean hasDirectionIn(int[][] map){
+    	int dir = map[nextPoint.getTileX()][nextPoint.getTileY()];
+    	return dir < 0 || dir == 5;
+    }
+    public void getNextCoord(){
+    	int dir = GameState.getDirection(getTileX(), getTileY());
+    	if (dir < 0){
+    		nextPoint = GameState.getNextCoord(getTileX(), getTileY());
+    	}else if(dir == 5){
+    		remove(false);
+    	}else{
+    		System.out.println("NODIRECTION");
+    	}
+    	
+    }
     /**
      * Updates the location of the monster along the path that is created
      * by the TileMap in the GameManager initialize method. Movement is
      * made exclusively on the X or Y axis until the path is complete or the
      * monster's healthPoints reach 0.
      */
-    public void updateLocation(int distance){
-
-        // Move along the x axis
+    private void moveIt(){
+    	double dx = nextPoint.getExactX() - x;
+    	double dy = nextPoint.getExactY() - y;
     	
-    	
-        if(moveX){
-            view.setCenterX(view.getCenterX() + distance);
-            HPview.setX(HPview.getX() + distance);
-            // Reached a changing point in path , switch direction
-            if(view.getCenterX() == path.get(nodeDirection).getExactX()){
-                moveX = false;
-                nodeDirection++;
-                // Traversed all changing points, path ended
-                if(nodeDirection == path.size()){
-                    pathFinished = true;
-                    isDead = true;
-                }
-            }
-        }
-        // Move along the y axis
-        else{
-            if(view.getCenterY() < path.get(nodeDirection).getExactY()) {
-                view.setCenterY(view.getCenterY() + distance);
-                HPview.setY(HPview.getY() + distance);
-            }
-            else{
-                view.setCenterY(view.getCenterY() - distance);
-                HPview.setY(HPview.getY() - distance);
-            }
-            // Reach changing point , switch direction
-            if(view.getCenterY() == path.get(nodeDirection).getExactY()){
-                moveX = true;
-                nodeDirection++;
-                if(nodeDirection == path.size()){
-                    pathFinished = true;
-                    isDead = true;
-                }
-            }
-        }
+    	double k = Math.pow(curSpeed, 2) / Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
+    	if (k < 1){
+    		setX(getX() + dx*k);
+    		setY(getY() + dy*k);
+    	}else{
+    		setX(nextPoint.getExactX());
+    		setY(nextPoint.getExactY());
+    		hasDirection = false;
+    	}
+    	curSpeed = maxSpeed;
     }
+    public void update(){
+    	if (hasDirection){
+    		for (Iterator<Buff> iterator = buffList.iterator(); iterator.hasNext();) {
+        		Buff buff = iterator.next();
+        		if (!buff.update()){
+        			//buff.remove();
+        	        iterator.remove();
+        	    }
+        	}
+    		moveIt();
+    	}else{
+    		hasDirection = true;
+    		getNextCoord();
+    	}
+       
+    }
+	public int getType() {
+		// TODO Auto-generated method stub
+		return this.type;
+	}
+	public double getMaxHP() {
+		// TODO Auto-generated method stub
+		return this.maxHP;
+	}
 
 
 }

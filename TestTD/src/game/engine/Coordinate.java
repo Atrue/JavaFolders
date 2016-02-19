@@ -31,8 +31,8 @@ public class Coordinate {
      * Y clicked coordinate
      */
     public Coordinate(double x , double y){
-        this.x = (int)(x / 64);
-        this.y = (int)(y / 64);
+        this.x = (int)(x / 32);
+        this.y = (int)(y / 32);
     }
 
     public int getTileX(){
@@ -43,11 +43,11 @@ public class Coordinate {
     }
 
     public int getExactX(){
-        return x * 64 + 32;
+        return x * 32 + 16;
     }
 
     public int getExactY(){
-        return y * 64 + 32;
+        return y * 32 + 16;
     }
 
     /**

@@ -1,16 +1,19 @@
 package game.engine.characters;
 
+import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import javafx.scene.text.Font;
 
 /**
  * Projectile is created when the tower attacks a monster. The GameManager
  * will create the animation using the start and end locations.
  */
-public class Projectile extends Circle {
+public class Projectile extends Label {
 	private static Pane view;
 	
+	private Tower parent;
     private Monster target;     // The target of the attack
     private double x;   // Starting location of the projectile
     private double y;
@@ -18,11 +21,19 @@ public class Projectile extends Circle {
     private double speed = 3.0;
     private double damage = 1.0;
 
-    Projectile(Monster target , int towerX , int towerY , Color color){
-        super(towerX , towerY , 5 , color);
+    Projectile(Tower parent, Monster target){
+        super("x");
+        setFont(new Font(15));
+        setTextFill(parent.getColor());
+        setHeight(20);
+        setWidth(20);
+        this.parent = parent;
+    	this.speed = parent.getAttackSpeed();
+    	this.damage = parent.getAttackDamage();
+    	this.x = parent.getX();
+        this.y = parent.getY();
         this.target = target;
-        this.x = towerX;
-        this.y = towerY;
+        
     }
     public static void setParentView(Pane v){
     	view = v;
@@ -35,37 +46,44 @@ public class Projectile extends Circle {
     	setVisible(false);
     }
     public void updateView(){
-    	setCenterX(x);
-    	setCenterY(y);
+    	setLayoutX(x-10);
+    	setLayoutY(y-10);
     }
     public Monster getTarget(){
         return target;
     }
 
-    public int getEndX(){
+    public double getEndX(){
         return target.getX();
     }
 
-    public int getEndY(){
+    public double getEndY(){
         return target.getY();
     }
     
     public boolean update(){
+    	if (target == null){
+    		System.out.println("strange");
+    		return false;
+    	}
     	
     	double pX = Math.pow(getEndX() - x ,2);
     	double pY = Math.pow(getEndY() - y ,2);
     	    	
     	if (pX + pY > Math.pow(speed, 2)){
     	
-	    	double dX = pX / ( (pX + pY) / Math.pow(speed, 2));
-	    	double dY = pY / ( (pX + pY) / Math.pow(speed, 2));
-	    	//move
-	    	x = x + Math.signum(getEndX() - x) * dX;
-	    	y = y + Math.signum(getEndY() - y) * dY;
+	    	double koef = speed / Math.sqrt(pX + pY);
+    		
+	    	x = x + (getEndX() - x)*koef;
+	    	y = y + (getEndY() - y)*koef;
+	    	
 	    	updateView();
 	    	
 	    	return true;
     	}else{
+    		if(parent.getBuff() != null && parent.getBuff().getLuck()){
+    			target.addBuff(parent.getBuff());
+    		}
     		target.takeDamage(damage);
     		return false;
     	}

@@ -9,15 +9,18 @@ import game.engine.GameState;
 public class Levels {
 	private GameManager parent;
 	
-	private int levels = 10;
+	private int levels = 50;
 	private Iterator<Wave> iterWave;
 	private Wave current;
-	private double timeWaveOut = 1;
+	private double timeWaveOut = 0.8;
 	public Levels(GameManager gm){
 		parent = gm;
 		ArrayList<Wave> waves = new ArrayList<>();
-		for(int i=0;i<10;i++){
-			waves.add(new Wave());
+		for(int i=0;i<levels;i++){
+			int typew = i > 0 && i%5==0? 1: 0;
+			typew = (i-2)%5==0 && i >5 ?2:typew;
+			System.out.print((i+1)+"- wave:");
+			waves.add(new Wave(typew, (Math.pow(i,1+i/15.)+10)/10.0 ));
 		}
 		iterWave = waves.iterator();
 	}
@@ -36,10 +39,14 @@ public class Levels {
 		}
 		
 	}
+	public boolean hasNext(){
+		return iterWave.hasNext();
+	}
 	public void nextWave(){
-		if(iterWave.hasNext())
+		if(iterWave.hasNext()){
 			current = iterWave.next();
-		else
+			
+		}else
 			System.out.println("END GAME");
 	}
 	class Wave{
@@ -48,9 +55,12 @@ public class Levels {
 		private double lastAdded = 0;
 		
 		
-		Wave(){
-			copy = new Monster(3);
+		Wave(int type, double koef){
+			copy = Monster.copy(ListOfCharacters.getMonster(type));
+			copy.powWith(koef);
+			System.out.println("MaxHP:"+copy.getMaxHP()+" type:"+copy.getType()+" reward:"+copy.getReward());
 		}
+		
 		public Monster get_copy(){
 			return Monster.copy(copy);
 		}

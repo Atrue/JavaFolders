@@ -1,12 +1,13 @@
 package game;
 
+import java.io.IOException;
+import java.net.URL;
+
 import game.engine.GameManager;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.stage.Stage;
-
-import java.io.IOException;
-import java.net.URL;
 
 /**
  * Utility class for controlling navigation between vistas.
@@ -22,12 +23,26 @@ public class MenuNavigator {
     public static final String MAIN    = "engine/res/menu/holder.fxml";
     public static final String MAINMENU = "engine/res/menu/mainmenu.fxml";
     public static final URL GAMEUI = GameManager.class.getResource("res/menu/gameui.fxml");
-
+    private static Scene[] activeScenes = new Scene[2];
     //stage for game
     public static Stage stage;
 
     public static void setStage(Stage stage1){
         stage = stage1;
+    }
+    public static void addScene(Scene st, int pos){
+    	activeScenes[pos] = st;
+    }
+    public static void setScene(int pos){
+    	if ( activeScenes[pos] != null ){
+    		stage.setScene(activeScenes[pos]);
+    	}else{
+    		System.err.println("HAS NO SCENE "+pos+". OPEN MENU");
+    	}
+    	
+    }
+    public static void setResultGame(boolean b){
+    	mainController.setMessage(b? "NOTBAD. YOU WON!" : "BAD. YOU LOSE!");
     }
     /** The main application layout controller. */
     private static MainController mainController;
@@ -65,5 +80,9 @@ public class MenuNavigator {
             e.printStackTrace();
         }
     }
+	public static void newGame() {
+		mainController.setMessage("");
+		
+	}
 
 }

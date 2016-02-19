@@ -10,21 +10,19 @@ import java.io.IOException;
 
 public class Main extends Application {
 
-    public final static int RESOLUTION_X = 1280;
-    public final static int RESOLUTION_Y = 800;
+    public final static int RESOLUTION_X = 1024;
+    public final static int RESOLUTION_Y = 570;
     @Override
     public void start(Stage stage) throws Exception{
         stage.setTitle("Tower Defense");
-        stage.setScene(
-                createScene(
-                        loadMainPane()
-                )
-        );
+        MenuNavigator.addScene(createScene(loadMainPane()), 0);
+        //stage.setScene(mainScene);
         stage.setWidth(RESOLUTION_X);
         stage.setHeight(RESOLUTION_Y);
         stage.setResizable(false);
         stage.show();
         MenuNavigator.setStage(stage);
+        MenuNavigator.setScene(0);
     }
 
     /**

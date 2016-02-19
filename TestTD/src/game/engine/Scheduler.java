@@ -3,15 +3,17 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 import game.engine.characters.Monster;
+import game.engine.characters.Projectile;
 import game.engine.characters.Tower;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.util.Duration;
 public class Scheduler{
+	private final int WAVE_TIME = 25;
 	private GameManager parent;
 	private Timeline timeline;
-	private double gametime = 5;
+	private double gametime = 0;
 	public Scheduler(GameManager manager){
 		this.parent = manager;
 		timeline = new Timeline(new KeyFrame(
@@ -30,42 +32,39 @@ public class Scheduler{
 		updateLocations();
 		updateTowers();
 		updateLabels();
-		
 		if (gametime <= 0){
-			parent.levelUp();
-			gametime = 30;
+			if (GameState.getLevels().hasNext()){
+				parent.levelUp();
+				gametime = WAVE_TIME;
+			}else{
+				if (GameState.getMonstersAlive().size() == 0)
+					parent.endGame(true);
+			}
 		}
 	}
 	public int getGameTime(){
 		return (int)gametime;
 	}
 	public void start(){
-		timeline.play();
+		if (GameState.isPaused())
+			timeline.play();
+		else 
+			System.err.println("Game is in state "+GameState.getState());
 	}
 	public void stop(){
 		timeline.stop();
 	}
 	
 	
+	@SuppressWarnings("unchecked")
 	private void updateLocations(){
 		GameState.getLevels().update();
-        if(!GameState.getMonstersAlive().isEmpty()){
-        	ArrayList<Monster> m = new ArrayList<>();
-            Iterator<Monster> monsters = GameState.getMonstersAlive().iterator();
-            Monster monster;
-            while(monsters.hasNext()) {
-                monster = monsters.next();
-                monster.updateLocation(1);
-                if(monster.isPathFinished()){
-                	m.add(monster);
-                	//removeMonster(monster);
-                }
-            }
-            for(Monster mo:m){
-            	parent.removeMonster(mo);
-            }
-            
-        }
+		
+		ArrayList<Monster> monsters = (ArrayList<Monster>) GameState.getMonstersAlive().clone();
+		for (Iterator<Monster> iterator = monsters.iterator(); iterator.hasNext();) {
+    		Monster monster = iterator.next();
+    		monster.update();
+    	}
     }
 	private void updateTowers(){
 		if(!GameState.getPlayerTowers().isEmpty()){
@@ -75,19 +74,7 @@ public class Scheduler{
 		}
 	}
 	private void updateLabels(){
-        parent.getController().updateLabels(
-            Integer.toString(GameState.getLevel()) ,
-            Integer.toString(GameState.getLives()) ,
-            Integer.toString(GameState.getResources()) ,
-            Integer.toString(GameState.getScore()) ,
-            Integer.toString(getGameTime())
-    );
-        if (GameState.getTarget() != null){
-        	parent.getController().updateTarget(
-            	Integer.toString(GameState.getTarget().getAttackDamage()),
-                Integer.toString(GameState.getTarget().getAttackRange()),
-                Double.toString(GameState.getTarget().getAttackSpeed())
-            );
-        }
-}
+		parent.updateLabels();
+	
+	}
 }
