@@ -1,5 +1,6 @@
 package game.engine;
 
+import java.awt.List;
 import java.io.Serializable;
 import java.util.ArrayList;
 
@@ -42,7 +43,7 @@ public class GameState implements Serializable{
     
     private static final int FPS = 30;
 	public static int[] SPFERES;
-    private static Coordinate[] startCords;
+    private static ArrayList<Coordinate> startCords;
     private static Coordinate endCord;
     
 
@@ -73,43 +74,50 @@ public class GameState implements Serializable{
         monstersAlive = new ArrayList<Monster>();
         SPFERES = new int[] {0,0,0};
         
+        startCords = new ArrayList<>();
         if (type == 0){
-        	startCords = new Coordinate[1];
-        	startCords[0] = new Coordinate(0, 8);
-        }else{
-        	startCords = new Coordinate[2];
-        	startCords[0] = new Coordinate(0, 5);
-        	startCords[1] = new Coordinate(0, 11);
+        	startCords.add(new Coordinate(0, 8));
+        	endCord = new Coordinate(21, 8);
+            //parent = gamestate;        
+            map = new int[22][17];
+        	for(int i=0;i<map.length;i++){
+        		boolean blocked = i == 0 || i + 1 == map.length;
+        		for(int j=0;j<map[i].length;j++){
+        			map[i][j] = blocked || (j == 0 || j + 1 == map[i].length)? 1:0;   
+        		}
+        	}
+        	for(Coordinate c: startCords){
+        		map[c.getTileX()][c.getTileY()] = 4;
+        	}
+        	map[endCord.getTileX()][endCord.getTileY()] = 5;
         }
         
         
-        endCord = new Coordinate(21, 8);
-        //parent = gamestate;        
-        map = new int[22][17];
-    	for(int i=0;i<map.length;i++){
-    		boolean blocked = i == 0 || i + 1 == map.length;
-    		for(int j=0;j<map[i].length;j++){
-    			map[i][j] = blocked || (j == 0 || j + 1 == map[i].length)? 1:0;   
-    		}
-    	}
-    	for(Coordinate c: startCords){
-    		map[c.getTileX()][c.getTileY()] = 4;
-    	}
-    	map[endCord.getTileX()][endCord.getTileY()] = 5;
+        
     	
         
     }
     public static void setMap(JSONArray jmap) throws JSONException{
+    	map = new int[jmap.length()][jmap.getJSONArray(0).length()];
+    	
     	for(int x=0;x<jmap.length();x++){
     		JSONArray jrow = jmap.getJSONArray(x);
-    		for(int y=0;x<jrow.length();y++){
-        		map[x][y] = jrow.getInt(y);
+    		for(int y=0;y<jrow.length();y++){
+    			int value = jrow.getInt(y);
+        		map[x][y] = value;
+        		if(value == 4){
+        			startCords.add(new Coordinate(x, y));
+        		}else if (value == 5){
+        			endCord = new Coordinate(x, y);
+        		}
         	}
     	}
+    	initPath();
     	manager.getController().repaintBG(map);
     }
     public static void initPath(){
-    	pathMap = algorithmA(fullCopy(map));
+    	if (map != null)
+    		pathMap = algorithmA(fullCopy(map));
     }
     private static int[][] fullCopy(int[][] from){
     	int[][] to = from.clone();
@@ -281,7 +289,7 @@ public class GameState implements Serializable{
     		
     }
 
-    public static Coordinate[] getStartCords(){
+    public static ArrayList<Coordinate> getStartCords(){
     	return startCords;
     }
     public static Coordinate getEndCord(){

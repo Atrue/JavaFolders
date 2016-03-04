@@ -68,7 +68,7 @@ public class NetworkState implements Serializable, Runnable {
 		state = IS_PAUSED;
 		level = 0;
 		lives = 20;
-		startResourse = 5;
+		startResourse = 10;
 		playerTowers = new ArrayList<Tower>();
 		monstersAlive = new ArrayList<Monster>();
 		
@@ -255,7 +255,6 @@ public class NetworkState implements Serializable, Runnable {
 			clients[id].doTransition( -tower.getPrice());
 			tower.setOwner(id, "");
 			addTower(tower);
-			
 			JSONObject json = new JSONObject();
 			json.put("event", "tower");
 			json.put("state", true);
@@ -455,7 +454,10 @@ public class NetworkState implements Serializable, Runnable {
 		try {
 			JSONObject json = new JSONObject();
 			json.put("event", "start");
-			json.put("map", mapToArray());
+			JSONObject config = new JSONObject();
+			config.put("lives", lives);
+			config.put("map", mapToArray());
+			json.put("config", config);
 			sendAll(json.toString());
 			while(true){
 				

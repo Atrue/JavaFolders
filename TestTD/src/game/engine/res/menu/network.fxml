@@ -65,8 +65,8 @@
                   <Label text="Создание и подключение" GridPane.columnSpan="2" GridPane.halignment="CENTER" />
                   <Label text="host" GridPane.halignment="CENTER" GridPane.rowIndex="1" />
                   <Label text="port" GridPane.halignment="CENTER" GridPane.rowIndex="2" />
-                  <Button mnemonicParsing="false" onAction="#connectClient" text="Подключиться" GridPane.halignment="CENTER" GridPane.rowIndex="3" />
-                  <Button mnemonicParsing="false" onAction="#createServer" text="Создать" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="3" />
+                  <Button fx:id="buttonConnect" mnemonicParsing="false" onAction="#connectClient" text="Подключиться" GridPane.halignment="CENTER" GridPane.rowIndex="3" />
+                  <Button fx:id="buttonCreate" mnemonicParsing="false" onAction="#createServer" text="Создать" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="3" />
                   <TextField fx:id="inputPort" text="16900" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                   <TextField fx:id="inputHost" text="localhost" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                </children>
@@ -108,7 +108,7 @@
                 <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
               </rowConstraints>
                <children>
-                  <Button mnemonicParsing="false" onAction="#startGame" text="Начать" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
+                  <Button fx:id="buttonStart" disable="true" mnemonicParsing="false" onAction="#startGame" text="Начать" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
                   <Button mnemonicParsing="false" onAction="#toMenu" text="Меню" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="1" />
                </children>
             </GridPane>

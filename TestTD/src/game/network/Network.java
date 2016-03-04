@@ -53,8 +53,19 @@ public class Network {
 	}
 	
 	public static void connectClient(String addr, String port, String name) {
-		client = new Client(addr, Integer.parseInt(port), name, MenuLink());
-		client.start();
+		if (client == null){
+			client = new Client(addr, Integer.parseInt(port), name, MenuLink());
+			client.start();
+		}else{
+			client.stop();
+			if (server != null)
+				try {
+					server.stop();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+		}
 		
 	}
 	public static Client getClient(){
@@ -75,7 +86,8 @@ public class Network {
 	}
 	public static void toMenu(){
 		try {
-			server.stop();
+			if (server != null)
+				server.stop();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -100,7 +112,11 @@ public class Network {
 			public void users(String string, boolean b) {
 				Platform.runLater(new Runnable() {
 				    public void run() {
-				    	controller.addUser(string, Color.BLUEVIOLET);
+				    	if (b){
+				    		controller.addUser(string, Color.BLUEVIOLET);
+				    	}else{
+				    		controller.removeUser(string);
+				    	}
 				    }
 				});
 			}
@@ -110,8 +126,8 @@ public class Network {
 				    public void run() {
 				    	try {
 							GameManager game = new GameManager();
-							game.initialize(1);
 							game.setClient(client);
+							game.initialize(1);							
 							game.setConfig(object);
 						} catch (IOException e) {
 							// TODO Auto-generated catch block

@@ -13,6 +13,7 @@ class ClientHandler implements Runnable{
 	private ClientHandler[] clients;
 	private NetworkState server;
    private Socket socket;
+   private boolean isConnection;
    private int id;
    private String name = "";
    private DataInputStream in;
@@ -25,6 +26,7 @@ class ClientHandler implements Runnable{
 	   this.server = server;
 	   this.id = id;
 	   this.resourse = server.getStartResourse();
+	   this.isConnection = true;
    }
    @Override
    public void run() {
@@ -35,7 +37,7 @@ class ClientHandler implements Runnable{
          String line = null;
          JSONObject json = new JSONObject();
          
-         while(true) {
+         while(isConnection) {
            line = in.readUTF(); // ожидаем пока клиент пришлет строку текста.
            json = new JSONObject(line);
            switch(json.getString("event")){
@@ -57,9 +59,13 @@ class ClientHandler implements Runnable{
         	   }
         	   break;
            }
+           case "logout":{
+        	   logOut();
+        	   break;
            }
-           send(json.toString());
+           }
          }
+         socket.close();
 		} catch (IOException | JSONException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -68,8 +74,24 @@ class ClientHandler implements Runnable{
    public boolean isTransition(int value){
 	   return resourse + value >= 0;
    }
-   public synchronized void doTransition(int value){
+   public synchronized void doTransition(int value) throws JSONException, IOException{
 	   resourse += value;
+	   JSONObject json = new JSONObject();
+	   json.put("event", "resourse");
+	   json.put("value", resourse);
+	   send(json.toString());
+   }
+   private void logOut() throws JSONException, IOException{
+	   JSONObject json = new JSONObject();
+	   json.put("event", "logout");
+	   json.put("name", name);
+	   for(int i=0;i<clients.length;i++){
+		   if (clients[i] != null && i != id){
+			   clients[i].send(json.toString());
+		   }
+	   }
+	   isConnection = false;
+	   clients[id] = null;
    }
    private void getLoginInfo(JSONObject json) throws JSONException{
 	   name = json.getString("user");
@@ -78,7 +100,6 @@ class ClientHandler implements Runnable{
 	   JSONObject json = new JSONObject();
 	   json.put("event", "newUser");
 	   json.put("name", name);
-	   json.put("message", "Connected new user "+name+"!");
 	   for(int i=0;i<clients.length;i++){
 		   if (clients[i] != null && i != id){
 			   clients[i].send(json.toString());

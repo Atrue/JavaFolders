@@ -273,7 +273,7 @@ public class GameManager {
     private void startGameLoop(int type) {
     	
     	timer = new Scheduler(this);
-    	if (type > 1){
+    	if (type > 0){
     		NetworkLink link = new NetworkLink(){
     			@Override
     			public String get() {
@@ -287,9 +287,13 @@ public class GameManager {
     			public void start(JSONObject object) {}
 				@Override
 				public void tower(int x, int y, int type, boolean what) {
-					if (what){
-						addTower(x,y, type);
-					}
+					Platform.runLater(new Runnable() {
+					    public void run() {
+					    	if (what){
+								addTower(x,y, type);
+							}
+					    }
+					});
 				}
     		};
     		client.setLink(link);

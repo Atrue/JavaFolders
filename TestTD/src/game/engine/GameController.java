@@ -164,6 +164,9 @@ public class GameController {
     }
     //Method paints the map using the given map array and tileset
     public void repaintBG(int[][] map){
+    	if(map == null){
+    		return;
+    	}
         //loads tileset
         Image tileset = new Image("game/engine/res/menu/icon/mapping.png");
 

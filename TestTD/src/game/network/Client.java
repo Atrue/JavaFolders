@@ -23,6 +23,7 @@ public class Client implements Runnable{
 	private DataOutputStream out;
 	private DataInputStream in;
 	private Socket socket;
+	private boolean isConnection;
 	public Client(String address, int port, String n, NetworkLink l){
 		link = l;
 		name = n;
@@ -42,7 +43,11 @@ public class Client implements Runnable{
 		}
 	}
 	public void start(){
+		isConnection = true;
 		new Thread(this).start();
+	}
+	public void stop(){
+		isConnection = false;
 	}
 	@Override
     public void run() {
@@ -50,7 +55,7 @@ public class Client implements Runnable{
         JSONObject json;
         try {
         	setLoginInfo();
-            while (true) {
+            while (isConnection) {
                 //System.out.println(in.readLine());
                 line = in.readUTF(); // ждем пока сервер отошлет строку текста.
                 json = new JSONObject(line);
@@ -63,8 +68,9 @@ public class Client implements Runnable{
                 	break;
                 }
                 case "newUser":{
-                	link.send(json.getString("message"));
-                	link.users(json.getString("name"), true);
+                	String name = json.getString("name");
+                	link.send("Connected new user "+name+"!");
+                	link.users(name, true);
                 	break;
                 }
                 case "login":{
@@ -85,8 +91,16 @@ public class Client implements Runnable{
              	   }
              	   break;
                 }
+                case "logout":{
+                	link.send(json.getString("message"));
+                	link.users(json.getString("name"), false);
+                	break;
                 }
+                }
+                System.out.println("Debug:"+json.toString());
             }
+            logOut();
+            socket.close();
         } catch (IOException x) {
             x.printStackTrace();
         } catch (JSONException e) {
@@ -95,6 +109,11 @@ public class Client implements Runnable{
 			System.err.println(line);
 		}
     }
+	private void logOut() throws JSONException, IOException{
+		JSONObject json = new JSONObject();
+    	json.put("event", "logout");
+        send(json);
+	}
 	private void setLoginInfo() throws JSONException, IOException{
 		JSONObject json = new JSONObject();
     	json.put("event", "login");
