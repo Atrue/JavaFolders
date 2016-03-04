@@ -288,8 +288,8 @@ public class GameController {
         this.currentResources.setText(currentResources);
         this.timeLabel.setText(timeLabel);
     }
-    public void updateTarget(int targetAttack, int targetRange, double targetSpeed, int upcost, int sellcost, String bId, String bDesc){
-        this.targetName.setText("Y");
+    public void updateTarget(int level, int targetAttack, int targetRange, double targetSpeed, int upcost, int sellcost, String bId, String bDesc){
+        this.targetName.setText("Y ["+String.valueOf(level)+"]");
         this.targetBuffId.setText(bId);
         this.targetBuffDesc.setText(bDesc);
     	this.targetAttack.setText(String.valueOf(targetAttack));

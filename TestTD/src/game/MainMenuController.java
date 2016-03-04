@@ -3,6 +3,7 @@ package game;
 import java.io.IOException;
 
 import game.engine.GameManager;
+import game.network.Network;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 
@@ -16,12 +17,18 @@ public class MainMenuController {
     public void startNewGame(){
         try{
             GameManager gameManager = new GameManager();
-            gameManager.initialize();}catch (IOException ex){ex.printStackTrace();}
+            gameManager.initialize(0);}catch (IOException ex){ex.printStackTrace();}
         	MenuNavigator.newGame();
         	loadGameButton.setDisable(false);
     }
     public void continueGame(){
     	MenuNavigator.setScene(1);
+    }
+    public void startNetwork() throws IOException{
+    	//GameManager gameManager = new GameManager();
+        //gameManager.initialize(1);
+    	//loadGameButton.setDisable(true);
+    	Network.init();
     }
     public void exitGame(){
         System.exit(1);

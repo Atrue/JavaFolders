@@ -3,6 +3,9 @@ package game.engine;
 import java.io.Serializable;
 import java.util.ArrayList;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+
 import game.engine.characters.Levels;
 
 /*
@@ -39,7 +42,7 @@ public class GameState implements Serializable{
     
     private static final int FPS = 30;
 	public static int[] SPFERES;
-    private static Coordinate startCord;
+    private static Coordinate[] startCords;
     private static Coordinate endCord;
     
 
@@ -60,7 +63,7 @@ public class GameState implements Serializable{
 	private static int[][] pathMap;
 
     //CONSTRUCTORS
-    public static void init(GameManager gm){
+    public static void init(GameManager gm, int type){
     	manager = gm;
         state = IS_PAUSED;
         resources = 10;
@@ -70,7 +73,16 @@ public class GameState implements Serializable{
         monstersAlive = new ArrayList<Monster>();
         SPFERES = new int[] {0,0,0};
         
-        startCord = new Coordinate(0, 8);
+        if (type == 0){
+        	startCords = new Coordinate[1];
+        	startCords[0] = new Coordinate(0, 8);
+        }else{
+        	startCords = new Coordinate[2];
+        	startCords[0] = new Coordinate(0, 5);
+        	startCords[1] = new Coordinate(0, 11);
+        }
+        
+        
         endCord = new Coordinate(21, 8);
         //parent = gamestate;        
         map = new int[22][17];
@@ -80,10 +92,21 @@ public class GameState implements Serializable{
     			map[i][j] = blocked || (j == 0 || j + 1 == map[i].length)? 1:0;   
     		}
     	}
-    	map[startCord.getTileX()][startCord.getTileY()] = 4;
+    	for(Coordinate c: startCords){
+    		map[c.getTileX()][c.getTileY()] = 4;
+    	}
     	map[endCord.getTileX()][endCord.getTileY()] = 5;
     	
         
+    }
+    public static void setMap(JSONArray jmap) throws JSONException{
+    	for(int x=0;x<jmap.length();x++){
+    		JSONArray jrow = jmap.getJSONArray(x);
+    		for(int y=0;x<jrow.length();y++){
+        		map[x][y] = jrow.getInt(y);
+        	}
+    	}
+    	manager.getController().repaintBG(map);
     }
     public static void initPath(){
     	pathMap = algorithmA(fullCopy(map));
@@ -193,15 +216,18 @@ public class GameState implements Serializable{
     	return cmap;
     }
     private static boolean isValidPath(int[][] map){
-    	if(map[startCord.getTileX()][startCord.getTileY()] < 0){
-    		for(Monster m:monstersAlive){
-    			if(!m.hasDirectionIn(map)){
-    				return false;
-    			}
-    		}
-    		return true;
+    	
+    	for(Coordinate c: startCords){
+    		if(map[c.getTileX()][c.getTileY()] >= 0)
+    			return false;
     	}
-    	return false;
+    	for(Monster m:monstersAlive){
+			if(!m.hasDirectionIn(map)){
+				return false;
+			}
+		}
+		return true;
+	
     }
     //SETTERS
     public static void setResources(int r){
@@ -255,8 +281,8 @@ public class GameState implements Serializable{
     		
     }
 
-    public static Coordinate getStartCord(){
-    	return startCord;
+    public static Coordinate[] getStartCords(){
+    	return startCords;
     }
     public static Coordinate getEndCord(){
     	return endCord;

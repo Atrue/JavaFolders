@@ -11,7 +11,7 @@ import java.io.IOException;
 public class Main extends Application {
 
     public final static int RESOLUTION_X = 1024;
-    public final static int RESOLUTION_Y = 570;
+    public final static int RESOLUTION_Y = 544;
     @Override
     public void start(Stage stage) throws Exception{
         stage.setTitle("Tower Defense");

@@ -1,34 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.effect.*?>
-<?import java.lang.*?>
-<?import javafx.geometry.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.layout.GridPane?>
-<?import javafx.scene.control.Button?>
-<?scenebuilder-stylesheet menustyle.css?>
-<?import javafx.scene.layout.VBox?>
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
 
-<GridPane alignment="TOP_LEFT" hgap="10" minWidth="1024.0" prefWidth="1024.0" vgap="10" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="game.MainMenuController">
+<GridPane alignment="TOP_LEFT" hgap="10" minWidth="1024.0" prefWidth="1024.0" vgap="10" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="game.MainMenuController">
           <padding><Insets bottom="10" left="25" right="50" top="100" /></padding>
    <children>
    
        <Label fx:id="tdlabel" alignment="CENTER" maxWidth="1.7976931348623157E308" text="YxZ TD" GridPane.columnIndex="1" GridPane.rowIndex="1">
-         <effect>
-            <Lighting bumpInput="$null" diffuseConstant="1.49" specularConstant="0.86">
-               <light>
-                  <Light.Distant color="#2b00ff" />
-               </light>
-            </Lighting>
-         </effect></Label>
+         </Label>
        <VBox alignment="CENTER" spacing="10" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="5" GridPane.valignment="CENTER">
           <children>
               <Button fx:id="loadGameButton" disable="true" onAction="#continueGame" prefHeight="35" prefWidth="120" text="Continue" />
               <Button fx:id="newGameButton" alignment="CENTER" onAction="#startNewGame" prefHeight="35" prefWidth="120" text="New Game" />
-              <Button fx:id="leaderboardButton" prefHeight="35" prefWidth="120" text="Leaderboard" />
+              <Button fx:id="networkButton" onAction="#startNetwork" prefHeight="35" prefWidth="120" text="Network Game" />
               <Button fx:id="optionsButton" prefHeight="35" prefWidth="120" text="Options" />
               <Button fx:id="exitButton" onAction="#exitGame" prefHeight="35" prefWidth="120" text="Exit" />
           </children>

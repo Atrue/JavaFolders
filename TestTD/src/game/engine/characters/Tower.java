@@ -22,6 +22,8 @@ import javafx.scene.text.TextFlow;
  */
 public class Tower extends TextFlow{
     private static Pane view;
+    private int ownerID;
+    private String ownerName;
     
 	private Text tName;
 	private Text tLevel;
@@ -108,6 +110,10 @@ public class Tower extends TextFlow{
     	setLayoutX(coords.getExactX()-16);
     	setLayoutY(coords.getExactY()-16); 
     	view.getChildren().add(this);
+    }
+    public void setOwner(int id, String name){
+    	ownerID = id;
+    	ownerName = name;
     }
     public void remove(){
     	for(Projectile prj:projectileList){
@@ -244,6 +250,14 @@ public class Tower extends TextFlow{
         return upgradeTime;
     }
 
+    public int getOwnerID(){
+    	return ownerID;
+    }
+    
+    public String getOwnerName(){
+    	return ownerName;
+    }
+    
     public Monster getTowerAttacker() {
         return target;
     }

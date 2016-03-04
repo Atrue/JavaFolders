@@ -35,6 +35,8 @@ public class Monster {
     
     private double x;
     private double y;
+    private double vX = 0;
+    private double vY = 0;
 	private boolean hasDirection;
 	private Coordinate nextPoint;
 
@@ -65,10 +67,7 @@ public class Monster {
     	Monster to = new Monster(from.maxHP, from.maxSpeed, from.reward, from.type);
     	return to;
     }
-    
-    public void add(){
-        x = GameState.getStartCord().getExactX();
-        y = GameState.getStartCord().getExactY();
+    public void add(Coordinate start){
         view = new Label("z");
         String style = "";
         if (type == 1){
@@ -79,18 +78,21 @@ public class Monster {
         
         view.setStyle(style);
         view.setFont(new Font(30));
-        view.setLayoutX(x-10);
-        view.setLayoutY(y-25);
         view.setPrefHeight(32);
         view.setPrefWidth(32);        
         
         HPview = new Rectangle(20, 5);
         HPview.setFill(Color.color(0, 1, 0));
-        HPview.setX(x - 16);
-        HPview.setY(y - 16);
+        
+        setX(start.getExactX() - 16);
+        setY(start.getExactY());
     	
     	parentView.getChildren().add(view);
     	parentView.getChildren().add(HPview);
+    }
+    public void addVariancy(){
+    	vX = Math.random()*30 - 15;
+    	vY = Math.random()*30 - 15;
     }
     public void remove(boolean isKilled){
     	
@@ -104,20 +106,20 @@ public class Monster {
     	return HPview;
     }
     public double getX(){
-        return x;
+        return x + vX;
     }
     public double getY(){
-        return y;
+        return y + vY;
     }
     public void setX(double x){
     	this.x = x;
-    	view.setLayoutX(x - 10);
-        HPview.setX(x - 10);
+    	view.setLayoutX(x + vX - 10);
+        HPview.setX(x + vX - 10);
     }
     public void setY(double y){
     	this.y = y;
-    	view.setLayoutY(y-25);
-        HPview.setY(y-16);
+    	view.setLayoutY(y + vY -25);
+        HPview.setY(y + vY -16);
     }
     public int getReward(){
         return (int)reward;
@@ -199,8 +201,8 @@ public class Monster {
     	
     	double k = Math.pow(curSpeed, 2) / Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
     	if (k < 1){
-    		setX(getX() + dx*k);
-    		setY(getY() + dy*k);
+    		setX(x + dx*k);
+    		setY(y + dy*k);
     	}else{
     		setX(nextPoint.getExactX());
     		setY(nextPoint.getExactY());

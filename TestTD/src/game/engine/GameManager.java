@@ -1,12 +1,20 @@
 package game.engine;
 
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 
+import javax.swing.SwingUtilities;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import game.network.Client;
+import game.network.NetworkLink;
 import game.Main;
 import game.MenuNavigator;
 import game.engine.characters.Levels;
@@ -14,6 +22,7 @@ import game.engine.characters.ListOfCharacters;
 import game.engine.characters.Monster;
 import game.engine.characters.Projectile;
 import game.engine.characters.Tower;
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Group;
 import javafx.scene.Node;
@@ -33,13 +42,14 @@ import javafx.scene.shape.Rectangle;
 public class GameManager {
 	private  GameController gameController;			// Handles fxml attributes (buttons and labels)
 	private Scheduler timer;
-	
+	private boolean NET;
 	
 	
 	
     private  Scene gameScene;                       // The main viewport
 	private int[][] map;
 	private Group group;
+	private Client client;
              
 	//private Group tilemapGroup;
 	
@@ -49,9 +59,10 @@ public class GameManager {
      *
      * @throws java.io.IOException
      */
-    public void initialize() throws java.io.IOException{
+    public void initialize(int type) throws java.io.IOException{
+    	NET = type == 0? false: true;
         // Initializes the game state
-        GameState.init(this);
+        GameState.init(this, type);
         
         // Creates gui hierarchy
         FXMLLoader loader = new FXMLLoader(MenuNavigator.GAMEUI);
@@ -86,12 +97,19 @@ public class GameManager {
         GameState.setLevels(levels);
         GameState.initPath();
         
-        
-        startGameLoop();
+        startGameLoop(type);
        
         updateLabels();
     }
-   
+    public void setConfig(JSONObject json){
+    	try {
+			GameState.setMap(json.getJSONArray("map"));
+			GameState.setLives(json.getInt("lives"));
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    }
 
     public GameController getController(){
     	return gameController;
@@ -120,19 +138,31 @@ public class GameManager {
         int xTile = (int)(xCords / 32);
         int yTile = (int)(yCords / 32);
 
-        
-        // Verify the user can afford the tower
-    	Tower tower = ListOfCharacters.getTower(type, 0);
-        if(GameState.getResources() >= tower.getPrice()) {
-        	if (GameState.tryMapNode(xTile, yTile, 3)){
-	        	Tower buyTower = Tower.copy(tower);
-	        	GameState.addTower(buyTower);
-	        	buyTower.add(xTile, yTile);
-	        	GameState.setResources(GameState.getResources() - buyTower.getPrice());
-        		return true;
-        	}
+        if(!NET){
+	        // Verify the user can afford the tower
+	    	Tower tower = ListOfCharacters.getTower(type, 0);
+	        if(GameState.getResources() >= tower.getPrice()) {
+	        	if (GameState.tryMapNode(xTile, yTile, 3)){
+		        	addTower(xTile, yTile, type);
+		        	GameState.setResources(GameState.getResources() - tower.getPrice());
+	        		return true;
+	        	}
+	        }
+	        return false;
+        }else{
+        	try {
+				client.buyTower(xTile, yTile, type);
+			} catch (JSONException | IOException e) {
+				e.printStackTrace();
+			}
+        	return false;
         }
-        return false;
+    }
+    private void addTower(int x,int y,int type){
+    	Tower tower = ListOfCharacters.getTower(type, 0);
+    	Tower buyTower = Tower.copy(tower);
+    	GameState.addTower(buyTower);
+    	buyTower.add(x, y);
     }
     // get tower by coords
     public Tower getTower(double xCords , double yCords){
@@ -164,8 +194,9 @@ public class GameManager {
     }
 
     // add monster
-    public void createMonster(Monster monster){
-    	monster.add();
+    public void createMonster(Monster monster, Coordinate c){
+    	monster.addVariancy();
+    	monster.add(c);
     	GameState.addMonster(monster);
     }
 
@@ -181,6 +212,7 @@ public class GameManager {
         gameController.updateBuyers();
         if (GameState.getTarget() != null){
         	gameController.updateTarget(
+        		GameState.getTarget().getLevel(),
             	GameState.getTarget().getAttackDamage(),
                 GameState.getTarget().getAttackRange(),
                 GameState.getTarget().getAttackCD(),
@@ -238,10 +270,30 @@ public class GameManager {
      * Responsible for all graphical updates, including playing
      * animations and updating monster locations.
      */
-    private void startGameLoop() {
+    private void startGameLoop(int type) {
     	
     	timer = new Scheduler(this);
-    	//timer.start();
+    	if (type > 1){
+    		NetworkLink link = new NetworkLink(){
+    			@Override
+    			public String get() {
+    				return null;
+    			}
+    			@Override
+    			public void send(String string) {}
+    			@Override
+    			public void users(String string, boolean b) {}
+    			@Override
+    			public void start(JSONObject object) {}
+				@Override
+				public void tower(int x, int y, int type, boolean what) {
+					if (what){
+						addTower(x,y, type);
+					}
+				}
+    		};
+    		client.setLink(link);
+    	}
     }
 
 
@@ -257,6 +309,9 @@ public class GameManager {
 		timer.stop();
 		MenuNavigator.setResultGame(st);
 		MenuNavigator.setScene(0);
+	}
+	public void setClient(Client client) {
+		this.client = client;
 	}
 	
 

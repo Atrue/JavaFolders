@@ -3,6 +3,7 @@ package game.engine.characters;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import game.engine.Coordinate;
 import game.engine.GameManager;
 import game.engine.GameState;
 
@@ -12,7 +13,7 @@ public class Levels {
 	private int levels = 50;
 	private Iterator<Wave> iterWave;
 	private Wave current;
-	private double timeWaveOut = 0.8;
+	private double timeWaveOut = 0.4;
 	public Levels(GameManager gm){
 		parent = gm;
 		ArrayList<Wave> waves = new ArrayList<>();
@@ -33,8 +34,10 @@ public class Levels {
 		if (current.isExist()){
 			current.update(timeWaveOut);
 			if (current.canBeGetting()){
-				Monster monster = current.getMonster();
-				parent.createMonster(monster);
+				for(Coordinate c: GameState.getStartCords()){
+					Monster monster = current.getMonster();
+					parent.createMonster(monster, c);
+				}
 			}
 		}
 		

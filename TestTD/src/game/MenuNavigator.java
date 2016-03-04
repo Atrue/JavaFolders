@@ -23,7 +23,7 @@ public class MenuNavigator {
     public static final String MAIN    = "engine/res/menu/holder.fxml";
     public static final String MAINMENU = "engine/res/menu/mainmenu.fxml";
     public static final URL GAMEUI = GameManager.class.getResource("res/menu/gameui.fxml");
-    private static Scene[] activeScenes = new Scene[2];
+    private static Scene[] activeScenes = new Scene[3];
     //stage for game
     public static Stage stage;
 

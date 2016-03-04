@@ -127,15 +127,15 @@
 	-fx-font-size:12px;
 }
 .label_def_text{
+	-fx-font: 19px "Serif";
 	-fx-font-style:italic;
-	-fx-font-size:17px;
 }
 .label_bold_text{
+	-fx-font: 19px "Serif";
 	-fx-font-style:italic;
 	-fx-font-weight:bold;
-	-fx-font-size:17px;
 }
 .label_Y_text{
 	-fx-font-weight:bold;
-	-fx-font-size:25px;
+	-fx-font: 25px "Serif";
 }
