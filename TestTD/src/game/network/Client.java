@@ -1,11 +1,9 @@
 package game.network;
 
-import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
@@ -14,8 +12,6 @@ import java.net.UnknownHostException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import javafx.scene.paint.Color;
 
 public class Client implements Runnable{
 	private NetworkLink link;
@@ -67,6 +63,21 @@ public class Client implements Runnable{
                 	link.send(json.getString("message"));
                 	break;
                 }
+                case "tick":{
+                	JSONObject conf = json.getJSONObject("config");
+                	link.tick();
+                	if(conf.has("newMonsters")){
+                		link.monster(json.getJSONArray("newMonsters"), true);
+                	}
+                	if(conf.has("levelUp")){
+                		link.special("level", conf.getInt("levelUp"));
+                	}
+                	if(conf.has("dieMonsters")){
+                		link.monster(json.getJSONArray("dieMonsters"), false);
+                	}
+                	
+                	break;
+                }
                 case "newUser":{
                 	String name = json.getString("name");
                 	link.send("Connected new user "+name+"!");
@@ -78,10 +89,17 @@ public class Client implements Runnable{
                 	for(int i=0;i<json.getJSONArray("names").length();i++){
                 		link.users(json.getJSONArray("names").getString(i), true);
                 	}
+                	if (json.getBoolean("special")){
+                		link.special("server", true);
+                	}
                 	break;
                 }
                 case "start":{
                 	link.start(json.getJSONObject("config"));
+                	break;
+                }
+                case "pause":{
+                	link.pause(json.getBoolean("state"), json.getString("message"));
                 	break;
                 }
                 case "tower":{
@@ -91,9 +109,17 @@ public class Client implements Runnable{
              	   }
              	   break;
                 }
+                case "money":{
+                	link.money(json.getInt("money"));
+                	break;
+                }
                 case "logout":{
                 	link.send(json.getString("message"));
                 	link.users(json.getString("name"), false);
+                	break;
+                }
+                case "endGame":{
+                	link.endGame(json.getBoolean("state"));
                 	break;
                 }
                 }

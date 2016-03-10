@@ -5,11 +5,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 import game.engine.Coordinate;
-import game.engine.GameState;
-import javafx.scene.control.Label;
+import game.engine.State;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 
@@ -24,11 +22,12 @@ public class Tower extends TextFlow{
     private static Pane view;
     private int ownerID;
     private String ownerName;
+    private State parent;
     
 	private Text tName;
 	private Text tLevel;
 	private Text tBuff;
-	
+	private boolean isGUI = false;
 	private int levelTower;
 	private int attackDamage;                       // Determines amount of health to reduce from monsters per attack
     private double attackSpeed;                     // Determines the time a tower must wait after an attack
@@ -99,17 +98,21 @@ public class Tower extends TextFlow{
     public static void setParentView(Pane v){
     	view = v;
     }
-    public void add(int x , int y){
+    public void add(int x , int y, State par, boolean visible){
     	coords = new Coordinate(x , y);
-    	updateLabels();
-        setId("tower_state");
-        setPrefWidth(32);  
-        setPrefHeight(32); 
-        setHeight(32);
-        setWidth(32);
-    	setLayoutX(coords.getExactX()-16);
-    	setLayoutY(coords.getExactY()-16); 
-    	view.getChildren().add(this);
+    	parent = par;
+    	isGUI = visible;
+    	if (isGUI){
+	    	updateLabels();
+	        setId("tower_state");
+	        setPrefWidth(32);  
+	        setPrefHeight(32); 
+	        setHeight(32);
+	        setWidth(32);
+	    	setLayoutX(coords.getExactX()-16);
+	    	setLayoutY(coords.getExactY()-16); 
+	    	view.getChildren().add(this);
+    	}
     }
     public void setOwner(int id, String name){
     	ownerID = id;
@@ -119,8 +122,10 @@ public class Tower extends TextFlow{
     	for(Projectile prj:projectileList){
     		prj.remove();
     	}
-    	view.getChildren().remove(this);
-    	setVisible(false);
+    	if (isGUI){
+    		view.getChildren().remove(this);
+    		setVisible(false);
+    	}
     }
     public boolean inRange(Monster target){
     	double x2 = target.getX();
@@ -136,13 +141,13 @@ public class Tower extends TextFlow{
     	return this.timeout == 0;
     }
     public double getTick(){
-		return 1./GameState.getFPS();
+		return 1./State.getFPS();
 	}
     public void update(){
     	if (timeout > 0){
     		timeout = timeout - getTick() > 0? timeout - getTick():0;
     	}else{
-	    	for (Monster monster:GameState.getMonstersAlive()){
+	    	for (Monster monster:parent.getMonstersAlive()){
 	    		if (inRange(monster)){
 	    			createProjectile(monster);
 	    			timeout = attackCD;
@@ -160,14 +165,16 @@ public class Tower extends TextFlow{
     }
     
     public void updateLabels(){
-    	tName.setText("Y");;
-    	String style = "-fx-font-size:25; -fx-text-alignment:center; ";
-    	if (levelTower > 3)
-    		style += " -fx-font-weight:bold;";
-    	tName.setFill(color);
-        tName.setStyle(style);
-        tLevel.setText(levelTower > 1? String.valueOf(levelTower): "");
-        tLevel.setStyle("-fx-font-size:10; -fx-text-alignment:center");
+    	if(isGUI){
+	    	tName.setText("Y");
+	    	String style = "-fx-font-size:25; -fx-text-alignment:center; ";
+	    	if (levelTower > 3)
+	    		style += " -fx-font-weight:bold;";
+	    	tName.setFill(color);
+	        tName.setStyle(style);
+	        tLevel.setText(levelTower > 1? String.valueOf(levelTower): "");
+	        tLevel.setStyle("-fx-font-size:10; -fx-text-alignment:center");
+    	}
     }
     /**
      * Upgrades the towers stats.
@@ -204,7 +211,7 @@ public class Tower extends TextFlow{
      * The target location of the projectile
      */
     public void createProjectile(Monster target){
-    	Projectile proj = new Projectile(this, target);
+    	Projectile proj = new Projectile(this, target, isGUI);
     	proj.add();
         projectileList.add(proj);
     }

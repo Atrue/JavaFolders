@@ -1,6 +1,6 @@
 package game.engine.characters;
 
-import game.engine.GameState;
+import game.engine.State;
 import javafx.scene.paint.Color;
 
 public class ListOfCharacters {
@@ -8,10 +8,17 @@ public class ListOfCharacters {
 	private static Tower[][] towers = new Tower[7][5];
 	private static Monster[] monsters = new Monster[4];
 	private static Buff[] buffs = new Buff[5];
+	
+	private static boolean isInit = false;
+	
 	public static void init(){
 		initBuffs();
 		initTowers();
 		initMonsters();
+		isInit = true;
+	}
+	public static boolean isinit(){
+		return isInit;
 	}
 	public static boolean isTowerExist(int type, int level){
 		if (type < towers.length && level < towers[type].length){
@@ -30,7 +37,7 @@ public class ListOfCharacters {
 	private static void initBuffs(){
 		buffs[0] = new Buff(0.314, 0, 1, 2.0, "i");
 		buffs[1] = new Buff(0, 0.25, 1, 1.0, "*");
-		buffs[2] = new Buff(1, 0, 0.2, 1./GameState.getFPS(), "!");
+		buffs[2] = new Buff(1, 0, 0.2, 1./State.getFPS(), "!");
 		buffs[3] = new Buff(0.1, 1, 0.2, 1.2, "&");
 	}
 	private static Buff bWith(int id, double k){
@@ -73,9 +80,9 @@ public class ListOfCharacters {
 		towers[5][3] = new Tower(1350, 5.5, 2.2, 120, 24675, 4, 5, Color.color(0, 0.7, 0.7), bWith(3,1.2));
 		towers[5][4] = new Tower(4050, 5.5, 2.1, 160, 86363, 5, 5, Color.color(0, 0.7, 0.7), bWith(3,1.2));
 		
-		towers[6][0] = new Tower(33, 4.5, 0.33, 90, 450, 1, 6, Color.color(0.7,0.7, 0), null);
-		towers[6][1] = new Tower(186, 4.5, 0.31, 95, 1755, 2, 6, Color.color(0.7, 0.7, 0), null);
-		towers[6][2] = new Tower(672, 4.5, 0.28, 100, 6669, 3, 6, Color.color(0.7, 0.7, 0), null);
+		towers[6][0] = new Tower(33, 4.5, 0.3, 90, 450, 1, 6, Color.color(0.7,0.7, 0), null);
+		towers[6][1] = new Tower(186, 4.5, 0.28, 95, 1755, 2, 6, Color.color(0.7, 0.7, 0), null);
+		towers[6][2] = new Tower(672, 4.5, 0.26, 100, 6669, 3, 6, Color.color(0.7, 0.7, 0), null);
 		towers[6][3] = new Tower(2304, 4.5, 0.24, 120, 24675, 4, 6, Color.color(0.7, 0.7, 0), null);
 		towers[6][4] = new Tower(7680, 4.5, 0.2, 160, 86363, 5, 6, Color.color(0.7, 0.7, 0), null);
 		

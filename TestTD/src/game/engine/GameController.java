@@ -1,5 +1,7 @@
 package game.engine;
 
+import java.io.IOException;
+
 /*
     handles the button inputs for the game
     and links to fxml ui
@@ -10,14 +12,19 @@ import java.net.URL;
 import java.nio.ByteBuffer;
 import java.util.ResourceBundle;
 
+import org.json.JSONException;
+
 import game.Main;
 import game.engine.characters.ListOfCharacters;
 import game.engine.characters.Tower;
+import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.Group;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -93,6 +100,12 @@ public class GameController {
     private Label timeLabel;
     @FXML
     private Pane ongrouppane;
+    @FXML
+    private GridPane messagesPane;
+    @FXML
+    private TextArea areaMessages;
+    @FXML
+    private TextField inputMessage;
     
     private GameManager gameManager; 
     
@@ -213,6 +226,9 @@ public class GameController {
         };
         backgroundMap.setImage(paintedMap);
     }
+    public void setNetPane(boolean b){
+    	messagesPane.setVisible(b);
+    }
     public void setListeners(){
         gameManager.getGameScene().setOnMouseClicked(new buyTower());
         gameManager.getGameScene().setOnMouseMoved(new MouseMove());
@@ -263,7 +279,17 @@ public class GameController {
     	}
     		
     }
-    
+    public void sendMessage(ActionEvent event){
+    	try {
+			gameManager.sendMessage(inputMessage.getText());
+		} catch (JSONException | IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    }
+    public void appendMessage(String m){
+    	areaMessages.appendText(m +"\n");
+    }
     //set mouse clicks to buy and place tower
     public void buyTower(int type){
     	if (!hoverState){
@@ -279,8 +305,12 @@ public class GameController {
         
     }
     public void pauseGame(){
-        gameManager.pause();
-        //open Game Menu
+        try {
+			gameManager.tryPause();
+		} catch (JSONException | IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     }
     public void openMenu(){
     	gameManager.openMenu();

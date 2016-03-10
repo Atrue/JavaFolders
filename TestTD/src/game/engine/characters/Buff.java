@@ -1,7 +1,6 @@
 package game.engine.characters;
 
-import game.engine.GameState;
-import javafx.scene.text.Text;
+import game.engine.State;
 
 public class Buff{
 	private double damage;
@@ -81,7 +80,7 @@ public class Buff{
 	}
 	
     public double getTick(){
-		return 1./GameState.getFPS();
+		return 1./State.getFPS();
 	}
     public String getId(){
     	return sIcon;

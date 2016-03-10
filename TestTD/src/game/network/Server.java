@@ -44,7 +44,7 @@ public class Server implements Runnable{
    public void newClient(Socket socket){
 	   for(int i=0;i<clients.length;i++){
 		   if (clients[i] == null){
-			   clients[i] = new ClientHandler(clients, socket, gameServer, i);
+			   clients[i] = new ClientHandler(clients, socket, gameServer, i, i==0);
 			   new Thread(clients[i]).start();
 			   break;
 		   }

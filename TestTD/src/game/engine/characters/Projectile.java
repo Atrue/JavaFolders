@@ -2,8 +2,6 @@ package game.engine.characters;
 
 import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
 import javafx.scene.text.Font;
 
 /**
@@ -17,16 +15,13 @@ public class Projectile extends Label {
     private Monster target;     // The target of the attack
     private double x;   // Starting location of the projectile
     private double y;
-
+    boolean isGUI;
     private double speed = 3.0;
     private double damage = 1.0;
 
-    Projectile(Tower parent, Monster target){
+    Projectile(Tower parent, Monster target, boolean isGUI){
         super("x");
-        setFont(new Font(15));
-        setTextFill(parent.getColor());
-        setHeight(20);
-        setWidth(20);
+        this.isGUI = isGUI;
         this.parent = parent;
     	this.speed = parent.getAttackSpeed();
     	this.damage = parent.getAttackDamage();
@@ -39,11 +34,20 @@ public class Projectile extends Label {
     	view = v;
     }
     public void add(){
-    	view.getChildren().add(this);
+    	if(isGUI){
+	    	setFont(new Font(15));
+	        setTextFill(parent.getColor());
+	        setHeight(20);
+	        setWidth(20);
+	    	view.getChildren().add(this);
+    	}
     }
+    
     public void remove(){
-    	view.getChildren().remove(this);
-    	setVisible(false);
+    	if(isGUI){
+    		view.getChildren().remove(this);
+    		setVisible(false);
+    	}
     }
     public void updateView(){
     	setLayoutX(x-10);

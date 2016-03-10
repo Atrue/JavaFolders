@@ -64,7 +64,7 @@ public class GameState implements Serializable{
 	private static int[][] pathMap;
 
     //CONSTRUCTORS
-    public static void init(GameManager gm, int type){
+    public static void init(GameManager gm, int type) {
     	manager = gm;
         state = IS_PAUSED;
         resources = 10;
@@ -288,7 +288,6 @@ public class GameState implements Serializable{
     	return false;
     		
     }
-
     public static ArrayList<Coordinate> getStartCords(){
     	return startCords;
     }
@@ -364,4 +363,6 @@ public class GameState implements Serializable{
     public static void addTower(Tower tower){playerTowers.add(tower);}
     public static void removeMonster(Monster monster){monstersAlive.remove(monster);}
     public static void removeTower(Tower tower){playerTowers.remove(tower);}
+    
+    
 }

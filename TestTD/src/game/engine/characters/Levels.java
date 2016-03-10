@@ -6,15 +6,17 @@ import java.util.Iterator;
 import game.engine.Coordinate;
 import game.engine.GameManager;
 import game.engine.GameState;
+import game.engine.State;
+import game.network.NetworkState;
 
 public class Levels {
-	private GameManager parent;
+	private State parent;
 	
 	private int levels = 50;
 	private Iterator<Wave> iterWave;
 	private Wave current;
 	private double timeWaveOut = 0.4;
-	public Levels(GameManager gm){
+	public Levels(State gm){
 		parent = gm;
 		ArrayList<Wave> waves = new ArrayList<>();
 		for(int i=0;i<levels;i++){
@@ -34,10 +36,7 @@ public class Levels {
 		if (current.isExist()){
 			current.update(timeWaveOut);
 			if (current.canBeGetting()){
-				for(Coordinate c: GameState.getStartCords()){
-					Monster monster = current.getMonster();
-					parent.createMonster(monster, c);
-				}
+				parent.createMonsters(current.getMonster());
 			}
 		}
 		
@@ -52,7 +51,7 @@ public class Levels {
 		}else
 			System.out.println("END GAME");
 	}
-	class Wave{
+	public class Wave{
 		private int count = 10;
 		private Monster copy;
 		private double lastAdded = 0;
@@ -86,7 +85,7 @@ public class Levels {
 			return count;
 		}
 		public double getTick(){
-			return 1./GameState.getFPS();
+			return 1./State.getFPS();
 		}
 		public Monster getMonster(){
 			if (count > 0){

@@ -5,6 +5,7 @@ import java.net.URL;
 
 import javax.swing.SwingUtilities;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -57,16 +58,22 @@ public class Network {
 			client = new Client(addr, Integer.parseInt(port), name, MenuLink());
 			client.start();
 		}else{
+			closeConnections();
+		}
+		
+	}
+	public static void closeConnections(){
+		if (client == null){
 			client.stop();
-			if (server != null)
+			if (server != null){
 				try {
 					server.stop();
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
+			}
 		}
-		
 	}
 	public static Client getClient(){
 		return client;
@@ -97,8 +104,11 @@ public class Network {
 	public static NetworkLink MenuLink(){
 		return new NetworkLink(){
 			@Override
-			public String get() {
-				return null;
+			public void special(String key, Object value) {
+				switch(key){
+				case "server":
+					controller.enableStartButton((boolean)value);
+				}
 			}
 			@Override
 			public void send(String string) {
@@ -137,7 +147,17 @@ public class Network {
 				});
 			}
 			@Override
-			public void tower(int x, int y, int type, boolean what) {
+			public void tower(int x, int y, int type, boolean what) {}
+			@Override
+			public void pause(boolean state, String name) {}
+			@Override
+			public void money(int money) {}
+			@Override
+			public void monster(JSONArray jsonArray, boolean b) {}
+			@Override
+			public void endGame(boolean boolean1) {}
+			@Override
+			public void tick() {
 				// TODO Auto-generated method stub
 				
 			}

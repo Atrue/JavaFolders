@@ -10,8 +10,7 @@ import java.util.Iterator;
  */
 
 import game.engine.Coordinate;
-import game.engine.GameManager;
-import game.engine.GameState;
+import game.engine.State;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
@@ -20,8 +19,12 @@ import javafx.scene.text.Font;
 
 public class Monster {
 	private static Pane parentView;
-	private static GameManager parent;
+	private State parent;
+    private boolean isGUI;
+    private boolean hasActivity;
     
+    private int ID;
+	
 	private ArrayList<Buff> buffList = new ArrayList<>();
     private Label view;                        // Graphical view of monster
     private Rectangle HPview;
@@ -57,9 +60,6 @@ public class Monster {
         reward = kGold;
         
     }
-    public static void init(GameManager gstate){
-    	parent = gstate;
-    }
     public static void setParentView(Pane v){
     	parentView = v;
     }
@@ -67,8 +67,18 @@ public class Monster {
     	Monster to = new Monster(from.maxHP, from.maxSpeed, from.reward, from.type);
     	return to;
     }
-    public void add(Coordinate start){
-        view = new Label("z");
+    public void add(Coordinate start, State pa, boolean visible, boolean activ){
+    	setX(start.getExactX() - 16);
+        setY(start.getExactY());
+    	isGUI = visible;
+    	hasActivity = activ;
+    	parent = pa;
+    	if (isGUI){
+    		addGUI();
+    	}
+    }
+    private void addGUI(){
+    	view = new Label("z");
         String style = "";
         if (type == 1){
         	style = "-fx-font-style:italic;";
@@ -84,8 +94,7 @@ public class Monster {
         HPview = new Rectangle(20, 5);
         HPview.setFill(Color.color(0, 1, 0));
         
-        setX(start.getExactX() - 16);
-        setY(start.getExactY());
+        
     	
     	parentView.getChildren().add(view);
     	parentView.getChildren().add(HPview);
@@ -93,13 +102,25 @@ public class Monster {
     public void addVariancy(){
     	vX = Math.random()*30 - 15;
     	vY = Math.random()*30 - 15;
+    	generateID();
+    }
+    private void generateID(){
+    	ID = (int)((String.valueOf((int)(Math.abs(vX) + Math.abs(vY)))+(int)(Math.random()*35) + "12").hashCode() *
+    			Math.random()*35 + 12);
+    }
+    public void addVariancy(double vx, double vy, int id){
+    	vX = vx;
+    	vY = vy;
+    	ID = id;
     }
     public void remove(boolean isKilled){
     	
-    	parentView.getChildren().remove(view);
-    	parentView.getChildren().remove(HPview);
-    	view.setVisible(false);
-    	HPview.setVisible(false);
+    	if(isGUI){
+    		parentView.getChildren().remove(view);
+    		parentView.getChildren().remove(HPview);
+    		view.setVisible(false);
+    		HPview.setVisible(false);
+    	}
     	parent.removeMonster(this, isKilled);
     }
     public Rectangle getHPView(){
@@ -113,13 +134,17 @@ public class Monster {
     }
     public void setX(double x){
     	this.x = x;
-    	view.setLayoutX(x + vX - 10);
-        HPview.setX(x + vX - 10);
+    	if(isGUI){
+    		view.setLayoutX(x + vX - 10);
+        	HPview.setX(x + vX - 10);
+    	}
     }
     public void setY(double y){
     	this.y = y;
-    	view.setLayoutY(y + vY -25);
-        HPview.setY(y + vY -16);
+    	if(isGUI){
+    		view.setLayoutY(y + vY -25);
+    		HPview.setY(y + vY -16);
+    	}
     }
     public int getReward(){
         return (int)reward;
@@ -153,9 +178,18 @@ public class Monster {
     	if (ns < curSpeed)
     		curSpeed = ns;
     }
+    public void hardSet(double hp, Buff b){
+    	double kHP = curHP / maxHP;
+    	HPview.setWidth(20 * kHP);
+    	HPview.setFill(Color.color(1 - kHP, kHP, 0));
+    	b.setTarget(this);
+    	buffList.add(b);
+    }
     public void takeDamage(double damage){
+    	if (!hasActivity)
+    		return;
         curHP = curHP - damage;
-        if (curHP <= 0){
+        if (curHP <= 0 && isGUI){
             
             remove(true);
             
@@ -166,12 +200,14 @@ public class Monster {
         }
     }
     public void addBuff(Buff b){
-    	Buff buff = Buff.copy(b);
-    	buff.setTarget(this);
-    	buffList.add(buff);
+    	if(hasActivity){
+    		Buff buff = Buff.copy(b);
+    		buff.setTarget(this);
+    		buffList.add(buff);
+    	}
     }
     public boolean hasDirection(){
-    	int dir = GameState.getDirection(getTileX(), getTileY());
+    	int dir = parent.getDirection(getTileX(), getTileY());
     	return (dir >= -8 && dir < 0) || (dir == 5);
     }
     public boolean hasDirectionIn(int[][] map){
@@ -179,9 +215,9 @@ public class Monster {
     	return dir < 0 || dir == 5;
     }
     public void getNextCoord(){
-    	int dir = GameState.getDirection(getTileX(), getTileY());
+    	int dir = parent.getDirection(getTileX(), getTileY());
     	if (dir < 0){
-    		nextPoint = GameState.getNextCoord(getTileX(), getTileY());
+    		nextPoint = parent.getNextCoord(getTileX(), getTileY());
     	}else if(dir == 5){
     		remove(false);
     	}else{
@@ -234,6 +270,14 @@ public class Monster {
 		// TODO Auto-generated method stub
 		return this.maxHP;
 	}
-
+	public double getVariancyX(){
+		return vX;
+	}
+	public double getVariancyY(){
+		return vY;
+	}
+	public int getID(){
+		return ID;
+	}
 
 }

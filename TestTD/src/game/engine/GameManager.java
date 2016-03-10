@@ -3,43 +3,37 @@ package game.engine;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.ListIterator;
+import java.util.Optional;
 
-import javax.swing.SwingUtilities;
-
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import game.network.Client;
-import game.network.NetworkLink;
-import game.Main;
 import game.MenuNavigator;
 import game.engine.characters.Levels;
 import game.engine.characters.ListOfCharacters;
 import game.engine.characters.Monster;
 import game.engine.characters.Projectile;
 import game.engine.characters.Tower;
+import game.network.Client;
+import game.network.Network;
+import game.network.NetworkLink;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonType;
 import javafx.scene.layout.StackPane;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
-import javafx.scene.shape.Line;
-import javafx.scene.shape.Rectangle;
 
 /**
  * Responsible for all communications between user interface and underlying
  * frameworks. The initialize method starts the game loop when called through
  * creating or loading a game.
  */
-public class GameManager {
+public class GameManager implements State{
 	private  GameController gameController;			// Handles fxml attributes (buttons and labels)
 	private Scheduler timer;
 	private boolean NET;
@@ -81,9 +75,11 @@ public class GameManager {
         gameScene.getStylesheets().add(GameManager.class.getResource("res/menu/gamestyle.css").toExternalForm());
         
         gameController.setListeners();
+        gameController.setNetPane(type == 1);
         gameController.setTooltips();
-        ListOfCharacters.init();
-        Monster.init(this);
+        if (!ListOfCharacters.isinit())
+        	ListOfCharacters.init();
+        
         
         MenuNavigator.addScene(gameScene, 1);
         MenuNavigator.setScene(1);
@@ -159,10 +155,11 @@ public class GameManager {
         }
     }
     private void addTower(int x,int y,int type){
+    	GameState.setMapNode(x, y, 3);
     	Tower tower = ListOfCharacters.getTower(type, 0);
     	Tower buyTower = Tower.copy(tower);
     	GameState.addTower(buyTower);
-    	buyTower.add(x, y);
+    	buyTower.add(x, y, this, true);
     }
     // get tower by coords
     public Tower getTower(double xCords , double yCords){
@@ -194,9 +191,17 @@ public class GameManager {
     }
 
     // add monster
-    public void createMonster(Monster monster, Coordinate c){
-    	monster.addVariancy();
-    	monster.add(c);
+    public void createMonsters(Monster monster){
+    	for(Coordinate c: GameState.getStartCords()){
+			monster.addVariancy();
+			monster.add(c, this, true, true);
+	    	GameState.addMonster(monster);
+		}
+    }
+    public void addMonsterWith(double vx, double vy, int hash, int index){
+    	Monster monster = GameState.getLevels().getWave().getMonster();
+    	monster.addVariancy(vx, vy, hash);
+    	monster.add(GameState.getStartCords().get(index), this, true, false);
     	GameState.addMonster(monster);
     }
 
@@ -225,19 +230,31 @@ public class GameManager {
             );
         }
 	}
-    
-    public void pause(){
-    	
-    	if (GameState.getState() == GameState.IS_PAUSED){
-    		timer.start();
-    		GameState.setState(GameState.IS_RUNNING);
-    		
-    	}else{
-    		timer.stop();
-    		GameState.setState(GameState.IS_PAUSED);
-    		
+    public void sendMessage(String text) throws JSONException, IOException{
+    	if(NET){
+    		client.sendMessage(text);
     	}
-    	gameController.setPauseView(GameState.isPaused());
+    }
+    public void tryPause() throws JSONException, IOException{
+    	if (!NET){
+    		int state = GameState.isPaused()? GameState.IS_RUNNING: GameState.IS_PAUSED;
+    		doPause(state);
+    		if (state != GameState.IS_PAUSED){
+        		timer.start();
+        	}else{
+        		timer.stop();    		
+        	}
+    	}else{
+    		JSONObject json = new JSONObject();
+    		json.put("event", "pause");
+    		json.put("state", GameState.getState() != GameState.IS_PAUSED);
+    		client.send(json);
+    	}
+    }
+    private void doPause(int state){
+    	GameState.setState(state);
+    	gameController.setPauseView(state == GameState.IS_PAUSED);
+    	
     }
 
 
@@ -249,6 +266,14 @@ public class GameManager {
      * @param monster
      * The monster to remove from the game.
      */
+    public void removeMonster(int id, boolean isKilled){
+    	for(Monster m:GameState.getMonstersAlive()){
+    		if(m.getID() == id){
+    			removeMonster(m, isKilled);
+    			break;
+    		}
+    	}
+    }
     public void removeMonster(Monster monster, boolean isKilled){
     	if (GameState.getMonstersAlive().contains(monster)){
 	        // Punish player
@@ -272,15 +297,28 @@ public class GameManager {
      */
     private void startGameLoop(int type) {
     	
-    	timer = new Scheduler(this);
+    	timer = new Scheduler(this, type == 1);
     	if (type > 0){
     		NetworkLink link = new NetworkLink(){
     			@Override
-    			public String get() {
-    				return null;
+    			public void special(String key, Object value) {
+    				Platform.runLater(new Runnable() {
+					    public void run() {
+		    				switch(key){
+		    					case "level":{
+		    						GameState.setLevel((int)value);
+		    						GameState.getLevels().nextWave();
+		    						timer.notifyTimer();
+		    						break;
+		    					}
+		    				}
+					    }
+					});
     			}
     			@Override
-    			public void send(String string) {}
+    			public void send(String string) {
+    				gameController.appendMessage(string);
+    			}
     			@Override
     			public void users(String string, boolean b) {}
     			@Override
@@ -295,6 +333,52 @@ public class GameManager {
 					    }
 					});
 				}
+				@Override
+				public void pause(boolean state, String name) {
+					doPause(state? GameState.IS_PAUSED: GameState.IS_RUNNING);
+					gameController.appendMessage(name);
+				}
+				@Override
+				public void money(int money) {
+					Platform.runLater(new Runnable() {
+					    public void run() {
+					    	GameState.setResources(money);
+					    }
+					});
+					
+				}
+				@Override
+				public void monster(JSONArray jsonArray, boolean b) {
+					Platform.runLater(new Runnable() {
+					    public void run() {
+					    	try {
+					    		for(int i=0;i<jsonArray.length();i++){
+					    			JSONObject vari = jsonArray.getJSONObject(i);
+					    			if (b){
+					    				addMonsterWith(vari.getDouble("vx"), vari.getDouble("vy"), vari.getInt("id"), i);
+					    			}else{
+					    				removeMonster(vari.getInt("id"), vari.getBoolean("state"));
+					    			}
+					    		}
+							} catch (JSONException e) {
+								e.printStackTrace();
+							}
+					    }
+					});
+				}
+				@Override
+				public void endGame(boolean boolean1) {
+					// TODO Auto-generated method stub
+					
+				}
+				@Override
+				public void tick() {
+					Platform.runLater(new Runnable() {
+					    public void run() {
+					    	timer.lightTick();
+					    }
+					});
+				}
     		};
     		client.setLink(link);
     	}
@@ -302,10 +386,31 @@ public class GameManager {
 
 
 	public void openMenu() {
-		timer.stop();
-		MenuNavigator.setScene(0);
+		if (!NET) {
+			timer.stop();
+			MenuNavigator.setScene(0);
+		}else{
+			alertDialog("Открыть меню", "Выход в меню отключит вас от текущей игры", "Если вы хотите отключиться от игры\nи выйти в меню, нажмите ОК");
+			
+		}
+		
 	}
+	
+	private void alertDialog(String title, String header, String content){
+		Alert alert = new Alert(AlertType.CONFIRMATION);
+		alert.setTitle(title);
+		alert.setHeaderText(header);
+		alert.setContentText(content);
 
+		Optional<ButtonType> result = alert.showAndWait();
+		if (result.get() == ButtonType.OK){
+		    Network.closeConnections();
+		    MenuNavigator.setScene(0);
+		} else {
+		    // ... user chose CANCEL or closed the dialog
+		}
+	}
+	
 
 	public void endGame(boolean st) {
 		GameState.setState(GameState.IS_STOPPED);
@@ -314,8 +419,30 @@ public class GameManager {
 		MenuNavigator.setResultGame(st);
 		MenuNavigator.setScene(0);
 	}
+	
 	public void setClient(Client client) {
 		this.client = client;
+	}
+	
+	
+	@Override
+	public ArrayList<Coordinate> getStartCords() {
+		return GameState.getStartCords();
+	}
+	@Override
+	public int getDirection(int tileX, int tileY) {
+		// TODO Auto-generated method stub
+		return GameState.getDirection(tileX, tileY);
+	}
+	@Override
+	public Coordinate getNextCoord(int tileX, int tileY) {
+		// TODO Auto-generated method stub
+		return GameState.getNextCoord(tileX, tileY);
+	}
+	@Override
+	public ArrayList<Monster> getMonstersAlive() {
+		// TODO Auto-generated method stub
+		return GameState.getMonstersAlive();
 	}
 	
 

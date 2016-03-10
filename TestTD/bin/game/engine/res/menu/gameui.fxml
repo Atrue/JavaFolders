@@ -1,22 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.paint.*?>
-<?import javafx.scene.effect.*?>
-<?import javafx.scene.image.*?>
-<?import javafx.scene.text.*?>
-<?import java.lang.*?>
-<?import javafx.geometry.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.text.Text?>
+<?import javafx.scene.text.TextFlow?>
 
-<Pane prefHeight="544.0" prefWidth="1024.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="game.engine.GameController">
+<Pane prefHeight="544.0" prefWidth="1024.0" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="game.engine.GameController">
    <children>
       <GridPane prefHeight="544.0" prefWidth="1024.0">
         <columnConstraints>
@@ -160,6 +158,23 @@
                   </GridPane>
                   <Label alignment="CENTER" contentDisplay="CENTER" maxWidth="1.7976931348623157E308" styleClass="label_def_text" text="Your palitre:" textAlignment="CENTER" visible="false" GridPane.columnSpan="4" GridPane.rowIndex="8" />
                   <Label alignment="CENTER" maxWidth="1.7976931348623157E308" styleClass="label_def_text" text="Pick a pen:" textAlignment="CENTER" GridPane.columnSpan="4" GridPane.rowIndex="3" />
+                  <GridPane fx:id="messagesPane" minHeight="100.0" GridPane.columnSpan="4" GridPane.rowIndex="7">
+                    <columnConstraints>
+                      <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                    </columnConstraints>
+                    <rowConstraints>
+                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                      <RowConstraints maxHeight="-Infinity" minHeight="20.0" prefHeight="20.0" vgrow="SOMETIMES" />
+                    </rowConstraints>
+                     <children>
+                        <ScrollPane hbarPolicy="NEVER" prefHeight="200.0" prefWidth="200.0">
+                           <content>
+                              <TextArea fx:id="areaMessages" prefHeight="77.0" prefWidth="199.0" />
+                           </content>
+                        </ScrollPane>
+                        <TextField fx:id="inputMessage" minHeight="20.0" onAction="#sendMessage" prefHeight="20.0" GridPane.rowIndex="1" />
+                     </children>
+                  </GridPane>
                </children>
                <columnConstraints>
                   <ColumnConstraints minWidth="50.0" />

@@ -12,6 +12,7 @@ import org.json.JSONObject;
 class ClientHandler implements Runnable{
 	private ClientHandler[] clients;
 	private NetworkState server;
+	private boolean isAdmin;
    private Socket socket;
    private boolean isConnection;
    private int id;
@@ -20,13 +21,14 @@ class ClientHandler implements Runnable{
    private DataOutputStream out;
    
    private int resourse;
-   ClientHandler(ClientHandler[] other, Socket client, NetworkState server, int id){
+   ClientHandler(ClientHandler[] other, Socket client, NetworkState server, int id, boolean state){
 	   this.clients = other;
 	   this.socket = client;
 	   this.server = server;
 	   this.id = id;
 	   this.resourse = server.getStartResourse();
 	   this.isConnection = true;
+	   this.isAdmin = state;
    }
    @Override
    public void run() {
@@ -59,6 +61,10 @@ class ClientHandler implements Runnable{
         	   }
         	   break;
            }
+           case "pause":{
+        	   server.trySetState(id, json.getBoolean("state"));
+        	   break;
+           }
            case "logout":{
         	   logOut();
         	   break;
@@ -71,6 +77,7 @@ class ClientHandler implements Runnable{
 			e.printStackTrace();
 		}
    }
+   // PUBLIC METHODS FOR SERVER
    public boolean isTransition(int value){
 	   return resourse + value >= 0;
    }
@@ -81,6 +88,15 @@ class ClientHandler implements Runnable{
 	   json.put("value", resourse);
 	   send(json.toString());
    }
+   public synchronized int getResourse(){
+	   return resourse;
+   }
+   public String getName(){
+	   return name;
+   }
+   
+   
+   // INNER METHODS
    private void logOut() throws JSONException, IOException{
 	   JSONObject json = new JSONObject();
 	   json.put("event", "logout");
@@ -107,6 +123,7 @@ class ClientHandler implements Runnable{
 	   }
 	   json.put("event", "login");
 	   json.put("names", getOnlineUsers());
+	   json.put("special", isAdmin);
 	   send(json.toString());
    }
    public synchronized void send(String message) throws IOException{

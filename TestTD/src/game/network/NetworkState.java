@@ -10,24 +10,17 @@ import org.json.JSONObject;
 
 import game.engine.Coordinate;
 import game.engine.GameState;
+import game.engine.State;
 import game.engine.characters.Levels;
 import game.engine.characters.ListOfCharacters;
-
-/*
-    keeps track of the games state, only one state
-    can be active at a time
- */
-
 import game.engine.characters.Monster;
 import game.engine.characters.Tower;
-import javafx.scene.Group;
-import javafx.scene.control.Label;
-import javafx.scene.layout.Pane;
 
-public class NetworkState implements Serializable, Runnable {
+public class NetworkState implements Serializable, Runnable, State {
 	private static final long serialVersionUID = 7170212054503203348L;
 	
 	private ClientHandler[] clients;
+	private ServerScheduler timer;
 	// game state flags
 	public final int IS_RUNNING = 1; // game is active
 	public final int IS_PAUSED = 2; // game is temporarily not active
@@ -44,7 +37,7 @@ public class NetworkState implements Serializable, Runnable {
 
 	private final int FPS = 30;
 	public int[] SPFERES;
-	private Coordinate[] startCords;
+	private ArrayList<Coordinate> startCords;
 	private Coordinate endCord;
 
 	// private GameManager parent;
@@ -59,6 +52,7 @@ public class NetworkState implements Serializable, Runnable {
 	private Levels levels;
 	private Tower target = null;
 	private int[][] pathMap;
+	private JSONObject configTick;
 
 	private int startResourse;
 
@@ -72,9 +66,14 @@ public class NetworkState implements Serializable, Runnable {
 		playerTowers = new ArrayList<Tower>();
 		monstersAlive = new ArrayList<Monster>();
 		
-		startCords = new Coordinate[2];
-		startCords[0] = new Coordinate(0, 5);
-		startCords[1] = new Coordinate(0, 11);
+		ListOfCharacters.init();
+		configTick = new JSONObject();
+		levels = new Levels(this);
+		timer = new ServerScheduler(this);
+		
+		startCords = new ArrayList<>();
+		startCords.add(new Coordinate(0, 5));
+		startCords.add(new Coordinate(0, 11));
 
 		endCord = new Coordinate(21, 8);
 		// parent = gamestate;
@@ -245,15 +244,102 @@ public class NetworkState implements Serializable, Runnable {
 	public void setLevels(Levels l) {
 		levels = l;
 	}
+	
+	public void levelUp(){
+		level ++;
+    	levels.nextWave();
+    	try {
+			configTick.put("levelUp", level);
+		} catch (JSONException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+	}
+	@Override
+	public void endGame(boolean st) {
+		try {
+			state = IS_STOPPED;
+			timer.stop();
+			JSONObject json = new JSONObject();
+			json.put("event", "endGame");
+			json.put("state", st);
+			sendAll(json.toString());
+			
+			
+		} catch (JSONException | IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	@Override
+	public void createMonsters(Monster monster) {
+		
+		try {
+			JSONArray mon = new JSONArray();
+			
+			for(Coordinate c: GameState.getStartCords()){
+				JSONObject var = new JSONObject();
+				monster.addVariancy();
+				monster.add(c, this, false, true);
+				var.put("vx", monster.getVariancyX());
+				var.put("vy", monster.getVariancyY());
+				var.put("id", monster.getID());
+				mon.put(var);
+		    	GameState.addMonster(monster);
+			}			
+			configTick.put("addMonsters", mon);
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+	}
 
+	@Override
+	public void removeMonster(Monster monster, boolean isKilled) {
+		try {
+			JSONObject mon = new JSONObject();
+			mon.put("id", monster.getID());
+			mon.put("state", isKilled);
+			JSONArray arr = mon.has("dieMonsters")? configTick.getJSONArray("dieMonsters"): new JSONArray();
+			arr.put(mon);
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void sendTick() throws JSONException, IOException {
+		JSONObject json = new JSONObject();
+		json.put("event", "tick");
+		json.put("config", configTick);
+		sendAll(json.toString());
+		configTick = new JSONObject();
+	}
 	/*
 	 * synchronizerd methods
 	 */
+	public synchronized void trySetState(int id, boolean pause) throws JSONException, IOException{
+		if (isPaused() != pause){
+			JSONObject json = new JSONObject();
+			json.put("event", "pause");
+			json.put("state", pause);
+			json.put("name", clients[id].getName());
+			String message = clients[id].getName() + (pause ? " paused" : " resumed") +" game";
+			json.put("message", message);
+			sendAll(json.toString());
+			
+			setState(pause? IS_PAUSED: IS_RUNNING);
+			if(pause){
+				timer.stop();
+			}else{
+				timer.start();
+			}
+		}
+	}
 	public synchronized void tryBuyTower(int id, int x, int y, int type) throws JSONException, IOException{
 		Tower tower = Tower.copy(ListOfCharacters.getTower(type, 0));
 		if(clients[id].isTransition( -tower.getPrice()) &&	tryMapNode(x, y, 3)){
 			clients[id].doTransition( -tower.getPrice());
 			tower.setOwner(id, "");
+			tower.add(x, y, this, false);
 			addTower(tower);
 			JSONObject json = new JSONObject();
 			json.put("event", "tower");
@@ -266,6 +352,10 @@ public class NetworkState implements Serializable, Runnable {
 	    	
 	    	sendAll(json.toString());
 	    	
+	    	json = new JSONObject();
+	    	json.put("event", "money");
+	    	json.put("money", clients[id].getResourse());
+	    	sendTo(json.toString(), id);
 		}
 	}
 	public synchronized void tryUpTower(int id,int x,int y) throws JSONException, IOException{
@@ -276,12 +366,17 @@ public class NetworkState implements Serializable, Runnable {
 			
 			JSONObject json = new JSONObject();
 			json.put("event", "tower");
-			json.put("state", false);
+			json.put("state", true);
 	    	JSONArray options = new JSONArray();
 	    	options.put(x);
 	    	options.put(y);
 	    	json.put("options", options);;
 	    	sendAll(json.toString());
+	    	
+	    	json = new JSONObject();
+	    	json.put("event", "money");
+	    	json.put("money", clients[id].getResourse());
+	    	sendTo(json.toString(), id);
 		}
 		
 	}
@@ -332,7 +427,7 @@ public class NetworkState implements Serializable, Runnable {
 	}
 	
 
-	public Coordinate[] getStartCords() {
+	public ArrayList<Coordinate> getStartCords() {
 		return startCords;
 	}
 
@@ -368,6 +463,9 @@ public class NetworkState implements Serializable, Runnable {
 		return map;
 	}
 
+	public int getStartResourse(){
+		return startResourse;
+	}
 	// checks to see if the node is open
 	public boolean nodeOpen(int xCord, int yCord) {
 		if (xCord < map.length && yCord < map[0].length) {
@@ -438,6 +536,16 @@ public class NetworkState implements Serializable, Runnable {
 			}
 		}
 	}
+	private void sendExcept(String message, int id) throws IOException{
+		for(int i=0;i<clients.length;i++){
+			if(clients[i]!=null && id != i){
+				clients[i].send(message);
+			}
+		}
+	}
+	private void sendTo(String message, int id) throws IOException{
+		clients[id].send(message);
+	}
 	private JSONArray mapToArray(){
 		JSONArray jmap = new JSONArray();
 		for(int x=0;x<map.length;x++){
@@ -467,8 +575,9 @@ public class NetworkState implements Serializable, Runnable {
 		}
 	}
 
-	public int getStartResourse() {
-		// TODO Auto-generated method stub
-		return startResourse;
-	}
+	
+
+
+
+	
 }
