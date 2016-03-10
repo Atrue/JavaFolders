@@ -320,7 +320,7 @@ public class GameManager implements State{
     				gameController.appendMessage(string);
     			}
     			@Override
-    			public void users(String string, boolean b) {}
+    			public void users(int id, String string, boolean b) {}
     			@Override
     			public void start(JSONObject object) {}
 				@Override

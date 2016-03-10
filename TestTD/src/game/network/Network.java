@@ -48,9 +48,14 @@ public class Network {
         MenuNavigator.addScene(gameScene, 2);
         MenuNavigator.setScene(2);
 	}
-	public static void createServer(String port){
-		server = new Server(Integer.parseInt(port));
-		controller.connectClient(null);
+	public static void createServer(String port, int number){
+		try{
+			server = new Server(Integer.parseInt(port), number);
+			server.start();
+			controller.connectClient(null);
+		} catch (NumberFormatException e){
+			System.err.println("fck, idiot.");
+		}
 	}
 	
 	public static void connectClient(String addr, String port, String name) {
@@ -62,17 +67,23 @@ public class Network {
 		}
 		
 	}
+	
+	public static boolean isServer(){
+		return server != null;
+	}
 	public static void closeConnections(){
-		if (client == null){
-			client.stop();
-			if (server != null){
-				try {
+		try {
+			if (client != null){
+				client.stop();
+				controller.connectionPack(false);
+				if (server != null){
 					server.stop();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
 				}
 			}
+		
+		} catch (IOException | JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 	public static Client getClient(){
@@ -92,13 +103,7 @@ public class Network {
 		server.startGame();
 	}
 	public static void toMenu(){
-		try {
-			if (server != null)
-				server.stop();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		closeConnections();
 		MenuNavigator.setScene(0);
 	}
 	public static NetworkLink MenuLink(){
@@ -119,13 +124,13 @@ public class Network {
 				});
 			}
 			@Override
-			public void users(String string, boolean b) {
+			public void users(int id, String string, boolean b) {
 				Platform.runLater(new Runnable() {
 				    public void run() {
 				    	if (b){
-				    		controller.addUser(string, Color.BLUEVIOLET);
+				    		controller.addUser(id, string);
 				    	}else{
-				    		controller.removeUser(string);
+				    		controller.removeUser(id);
 				    	}
 				    }
 				});

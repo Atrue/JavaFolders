@@ -16,14 +16,17 @@ import javafx.scene.paint.Color;
 public class Server implements Runnable{
 	
    private ServerSocket mainsocket;
-   private ClientHandler[] clients = new ClientHandler[3];
+   private ClientHandler[] clients;
    private NetworkState gameServer;
-   public Server(int port)    {
+   public Server(int port, int number)    {
        try {
     	 mainsocket = new ServerSocket(port);
+    	 clients = new ClientHandler[number];
     	 gameServer = new NetworkState(clients);
-         new Thread(this).start();
       } catch(Exception x) { x.printStackTrace(); }
+   }
+   public void start(){
+	   new Thread(this).start();
    }
    @Override
    public void run() {

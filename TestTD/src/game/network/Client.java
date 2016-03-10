@@ -42,8 +42,9 @@ public class Client implements Runnable{
 		isConnection = true;
 		new Thread(this).start();
 	}
-	public void stop(){
+	public void stop() throws JSONException, IOException{
 		isConnection = false;
+		logOut();
 	}
 	@Override
     public void run() {
@@ -81,13 +82,14 @@ public class Client implements Runnable{
                 case "newUser":{
                 	String name = json.getString("name");
                 	link.send("Connected new user "+name+"!");
-                	link.users(name, true);
+                	link.users(json.getInt("id"), name, true);
                 	break;
                 }
                 case "login":{
                 	link.send("You connected to "+socket.getInetAddress()+":"+socket.getPort());
                 	for(int i=0;i<json.getJSONArray("names").length();i++){
-                		link.users(json.getJSONArray("names").getString(i), true);
+                		JSONArray pair = json.getJSONArray("names").getJSONArray(i);
+                		link.users(pair.getInt(0), pair.getString(1), true);
                 	}
                 	if (json.getBoolean("special")){
                 		link.special("server", true);
@@ -114,8 +116,8 @@ public class Client implements Runnable{
                 	break;
                 }
                 case "logout":{
-                	link.send(json.getString("message"));
-                	link.users(json.getString("name"), false);
+                	link.send(json.getString("name") + " is disconnected.");
+                	link.users(json.getInt("id"), json.getString("name"), false);
                 	break;
                 }
                 case "endGame":{
@@ -125,7 +127,7 @@ public class Client implements Runnable{
                 }
                 System.out.println("Debug:"+json.toString());
             }
-            logOut();
+            
             socket.close();
         } catch (IOException x) {
             x.printStackTrace();

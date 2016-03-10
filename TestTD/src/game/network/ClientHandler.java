@@ -101,6 +101,7 @@ class ClientHandler implements Runnable{
 	   JSONObject json = new JSONObject();
 	   json.put("event", "logout");
 	   json.put("name", name);
+	   json.put("id", id);
 	   for(int i=0;i<clients.length;i++){
 		   if (clients[i] != null && i != id){
 			   clients[i].send(json.toString());
@@ -116,14 +117,15 @@ class ClientHandler implements Runnable{
 	   JSONObject json = new JSONObject();
 	   json.put("event", "newUser");
 	   json.put("name", name);
+	   json.put("id", id);
 	   for(int i=0;i<clients.length;i++){
 		   if (clients[i] != null && i != id){
 			   clients[i].send(json.toString());
 		   }
 	   }
 	   json.put("event", "login");
-	   json.put("names", getOnlineUsers());
 	   json.put("special", isAdmin);
+	   json.put("names", getOnlineUsers());
 	   send(json.toString());
    }
    public synchronized void send(String message) throws IOException{
@@ -144,7 +146,10 @@ class ClientHandler implements Runnable{
 	   JSONArray js = new JSONArray();
 	   for(int i=0;i<clients.length;i++){
 		   if (clients[i] != null){
-			   js.put(clients[i].name);
+			   JSONArray pair = new JSONArray();
+			   pair.put(clients[i].id);
+			   pair.put(clients[i].name);
+			   js.put(pair);
 		   }
 	   }
 	   return js;
