@@ -50,6 +50,7 @@ public class Scheduler{
 		 // Times each second
 		gametime -= getTick();
 
+		updateLevels();
 		updateLocations();
 		updateTowers();
 		updateLabels();
@@ -78,10 +79,11 @@ public class Scheduler{
 		timeline.stop();
 	}
 	
-	
+	private void updateLevels(){
+		GameState.getLevels().update();
+	}
 	@SuppressWarnings("unchecked")
 	private void updateLocations(){
-		GameState.getLevels().update();
 		
 		ArrayList<Monster> monsters = (ArrayList<Monster>) GameState.getMonstersAlive().clone();
 		for (Iterator<Monster> iterator = monsters.iterator(); iterator.hasNext();) {

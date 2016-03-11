@@ -85,9 +85,6 @@ public class Projectile extends Label {
 	    	
 	    	return true;
     	}else{
-    		if(parent.getBuff() != null && parent.getBuff().getLuck()){
-    			target.addBuff(parent.getBuff());
-    		}
     		target.takeDamage(damage);
     		return false;
     	}

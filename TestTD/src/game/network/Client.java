@@ -65,17 +65,16 @@ public class Client implements Runnable{
                 }
                 case "tick":{
                 	JSONObject conf = json.getJSONObject("config");
-                	link.tick();
-                	if(conf.has("newMonsters")){
-                		link.monster(json.getJSONArray("newMonsters"), true);
+                	if(conf.has("addMonsters")){
+                		link.monster(conf.getJSONArray("addMonsters"), true);
                 	}
                 	if(conf.has("levelUp")){
                 		link.special("level", conf.getInt("levelUp"));
                 	}
                 	if(conf.has("dieMonsters")){
-                		link.monster(json.getJSONArray("dieMonsters"), false);
+                		link.monster(conf.getJSONArray("dieMonsters"), false);
                 	}
-                	
+                	link.tick();
                 	break;
                 }
                 case "newUser":{

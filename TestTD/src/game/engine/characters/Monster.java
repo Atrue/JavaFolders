@@ -68,14 +68,14 @@ public class Monster {
     	return to;
     }
     public void add(Coordinate start, State pa, boolean visible, boolean activ){
-    	setX(start.getExactX() - 16);
-        setY(start.getExactY());
-    	isGUI = visible;
+        isGUI = visible;
     	hasActivity = activ;
     	parent = pa;
     	if (isGUI){
     		addGUI();
     	}
+    	setX(start.getExactX() - 16);
+        setY(start.getExactY());
     }
     private void addGUI(){
     	view = new Label("z");
@@ -189,11 +189,11 @@ public class Monster {
     	if (!hasActivity)
     		return;
         curHP = curHP - damage;
-        if (curHP <= 0 && isGUI){
+        if (curHP <= 0){
             
             remove(true);
             
-        }else{
+        }else if(isGUI){
         	double kHP = curHP / maxHP;
         	HPview.setWidth(20 * kHP);
         	HPview.setFill(Color.color(1 - kHP, kHP, 0));

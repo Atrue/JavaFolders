@@ -16,7 +16,7 @@ import game.engine.characters.ListOfCharacters;
 import game.engine.characters.Monster;
 import game.engine.characters.Tower;
 
-public class NetworkState implements Serializable, Runnable, State {
+public class NetworkState implements Serializable, State {
 	private static final long serialVersionUID = 7170212054503203348L;
 	
 	private ClientHandler[] clients;
@@ -88,7 +88,7 @@ public class NetworkState implements Serializable, Runnable, State {
 			map[c.getTileX()][c.getTileY()] = 4;
 		}
 		map[endCord.getTileX()][endCord.getTileY()] = 5;
-
+		initPath();
 	}
 
 	public void initPath() {
@@ -277,7 +277,7 @@ public class NetworkState implements Serializable, Runnable, State {
 		try {
 			JSONArray mon = new JSONArray();
 			
-			for(Coordinate c: GameState.getStartCords()){
+			for(Coordinate c: getStartCords()){
 				JSONObject var = new JSONObject();
 				monster.addVariancy();
 				monster.add(c, this, false, true);
@@ -285,7 +285,7 @@ public class NetworkState implements Serializable, Runnable, State {
 				var.put("vy", monster.getVariancyY());
 				var.put("id", monster.getID());
 				mon.put(var);
-		    	GameState.addMonster(monster);
+		    	addMonster(monster);
 			}			
 			configTick.put("addMonsters", mon);
 		} catch (JSONException e) {
@@ -299,8 +299,13 @@ public class NetworkState implements Serializable, Runnable, State {
 			JSONObject mon = new JSONObject();
 			mon.put("id", monster.getID());
 			mon.put("state", isKilled);
-			JSONArray arr = mon.has("dieMonsters")? configTick.getJSONArray("dieMonsters"): new JSONArray();
-			arr.put(mon);
+			if(mon.has("dieMonsters")){
+				configTick.getJSONArray("dieMonsters").put(mon);
+			}else{
+				JSONArray arr = new JSONArray();
+				arr.put(mon);
+				configTick.put("dieMonsters", arr);
+			}
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
@@ -557,8 +562,7 @@ public class NetworkState implements Serializable, Runnable, State {
 		}
 		return jmap;
 	}
-	@Override
-	public void run() {
+	public void start() {
 		try {
 			JSONObject json = new JSONObject();
 			json.put("event", "start");
@@ -567,9 +571,6 @@ public class NetworkState implements Serializable, Runnable, State {
 			config.put("map", mapToArray());
 			json.put("config", config);
 			sendAll(json.toString());
-			while(true){
-				
-			}
 	   } catch (JSONException | IOException e) {
 			e.printStackTrace();
 		}

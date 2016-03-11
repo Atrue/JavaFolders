@@ -36,10 +36,12 @@ public class Server implements Runnable{
 	   } catch(Exception x) { x.printStackTrace(); }
    }
    public void startGame(){
-	   new Thread(gameServer).start();
+	   gameServer.start();
    }
    public void stop() throws IOException{
-	   mainsocket.close();
+	   if(mainsocket!=null){
+		   mainsocket.close();
+	   }
    }
    public void newClient(Socket socket){
 	   for(int i=0;i<clients.length;i++){

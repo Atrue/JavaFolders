@@ -30,7 +30,7 @@ class ServerScheduler{
 	}
 	
 	public double getTick(){
-		return 1./parent.getFPS();
+		return 1./State.getFPS();
 	}
 	private void tick(){
 		 // Times each second

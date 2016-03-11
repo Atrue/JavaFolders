@@ -27,7 +27,8 @@ public class Tower extends TextFlow{
 	private Text tName;
 	private Text tLevel;
 	private Text tBuff;
-	private boolean isGUI = false;
+	private boolean isGUI; // false = server
+	private boolean hasActivity; // false = connected client
 	private int levelTower;
 	private int attackDamage;                       // Determines amount of health to reduce from monsters per attack
     private double attackSpeed;                     // Determines the time a tower must wait after an attack
@@ -98,10 +99,11 @@ public class Tower extends TextFlow{
     public static void setParentView(Pane v){
     	view = v;
     }
-    public void add(int x , int y, State par, boolean visible){
+    public void add(int x , int y, State par, boolean visible, boolean activity){
     	coords = new Coordinate(x , y);
     	parent = par;
     	isGUI = visible;
+    	hasActivity = activity;
     	if (isGUI){
 	    	updateLabels();
 	        setId("tower_state");
@@ -158,6 +160,12 @@ public class Tower extends TextFlow{
     	for (Iterator<Projectile> iterator = projectileList.iterator(); iterator.hasNext();) {
     		Projectile projectile = iterator.next();
     		if (!projectile.update()){
+    			if(buff != null && projectile.getTarget() != null && buff.getLuck()){
+    				projectile.getTarget().addBuff(buff);
+    				if (hasActivity){
+    					parent.addBuff(projectile.getTarget().getID(), getTileX(), getTileY());
+    				}
+        		}
     			projectile.remove();
     	        iterator.remove();
     	    }

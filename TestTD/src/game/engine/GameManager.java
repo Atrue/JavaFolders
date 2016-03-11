@@ -199,10 +199,12 @@ public class GameManager implements State{
 		}
     }
     public void addMonsterWith(double vx, double vy, int hash, int index){
-    	Monster monster = GameState.getLevels().getWave().getMonster();
+    	Monster monster = GameState.getLevels().getWave().get_copy();
     	monster.addVariancy(vx, vy, hash);
     	monster.add(GameState.getStartCords().get(index), this, true, false);
+    	System.out.println(index+":"+monster.getTileX()+"/"+monster.getTileY()+" "+monster.getVariancyX()+"|"+monster.getVariancyY());
     	GameState.addMonster(monster);
+    	
     }
 
     
@@ -299,91 +301,92 @@ public class GameManager implements State{
     	
     	timer = new Scheduler(this, type == 1);
     	if (type > 0){
-    		NetworkLink link = new NetworkLink(){
-    			@Override
-    			public void special(String key, Object value) {
-    				Platform.runLater(new Runnable() {
-					    public void run() {
-		    				switch(key){
-		    					case "level":{
-		    						GameState.setLevel((int)value);
-		    						GameState.getLevels().nextWave();
-		    						timer.notifyTimer();
-		    						break;
-		    					}
-		    				}
-					    }
-					});
-    			}
-    			@Override
-    			public void send(String string) {
-    				gameController.appendMessage(string);
-    			}
-    			@Override
-    			public void users(String string, boolean b) {}
-    			@Override
-    			public void start(JSONObject object) {}
-				@Override
-				public void tower(int x, int y, int type, boolean what) {
-					Platform.runLater(new Runnable() {
-					    public void run() {
-					    	if (what){
-								addTower(x,y, type);
-							}
-					    }
-					});
-				}
-				@Override
-				public void pause(boolean state, String name) {
-					doPause(state? GameState.IS_PAUSED: GameState.IS_RUNNING);
-					gameController.appendMessage(name);
-				}
-				@Override
-				public void money(int money) {
-					Platform.runLater(new Runnable() {
-					    public void run() {
-					    	GameState.setResources(money);
-					    }
-					});
-					
-				}
-				@Override
-				public void monster(JSONArray jsonArray, boolean b) {
-					Platform.runLater(new Runnable() {
-					    public void run() {
-					    	try {
-					    		for(int i=0;i<jsonArray.length();i++){
-					    			JSONObject vari = jsonArray.getJSONObject(i);
-					    			if (b){
-					    				addMonsterWith(vari.getDouble("vx"), vari.getDouble("vy"), vari.getInt("id"), i);
-					    			}else{
-					    				removeMonster(vari.getInt("id"), vari.getBoolean("state"));
-					    			}
-					    		}
-							} catch (JSONException e) {
-								e.printStackTrace();
-							}
-					    }
-					});
-				}
-				@Override
-				public void endGame(boolean boolean1) {
-					// TODO Auto-generated method stub
-					
-				}
-				@Override
-				public void tick() {
-					Platform.runLater(new Runnable() {
-					    public void run() {
-					    	timer.lightTick();
-					    }
-					});
-				}
-    		};
-    		client.setLink(link);
+    		client.setLink(getLink());
     	}
     }
-
+    private NetworkLink getLink(){
+    	return new NetworkLink(){
+			@Override
+			public void special(String key, Object value) {
+				Platform.runLater(new Runnable() {
+				    public void run() {
+	    				switch(key){
+	    					case "level":{
+	    						GameState.setLevel((int)value);
+	    						GameState.getLevels().nextWave();
+	    						timer.notifyTimer();
+	    						break;
+	    					}
+	    				}
+				    }
+				});
+			}
+			@Override
+			public void send(String string) {
+				gameController.appendMessage(string);
+			}
+			@Override
+			public void users(String string, boolean b) {}
+			@Override
+			public void start(JSONObject object) {}
+			@Override
+			public void tower(int x, int y, int type, boolean what) {
+				Platform.runLater(new Runnable() {
+				    public void run() {
+				    	if (what){
+							addTower(x,y, type);
+						}
+				    }
+				});
+			}
+			@Override
+			public void pause(boolean state, String name) {
+				doPause(state? GameState.IS_PAUSED: GameState.IS_RUNNING);
+				gameController.appendMessage(name);
+			}
+			@Override
+			public void money(int money) {
+				Platform.runLater(new Runnable() {
+				    public void run() {
+				    	GameState.setResources(money);
+				    }
+				});
+				
+			}
+			@Override
+			public void monster(JSONArray jsonArray, boolean b) {
+				Platform.runLater(new Runnable() {
+				    public void run() {
+				    	try {
+				    		for(int i=0;i<jsonArray.length();i++){
+				    			JSONObject vari = jsonArray.getJSONObject(i);
+				    			if (b){
+				    				addMonsterWith(vari.getDouble("vx"), vari.getDouble("vy"), vari.getInt("id"), i);
+				    			}else{
+				    				removeMonster(vari.getInt("id"), vari.getBoolean("state"));
+				    			}
+				    		}
+						} catch (JSONException e) {
+							e.printStackTrace();
+						}
+				    }
+				});
+			}
+			@Override
+			public void endGame(boolean boolean1) {
+				// TODO Auto-generated method stub
+				
+			}
+			@Override
+			public void tick() {
+				Platform.runLater(new Runnable() {
+				    public void run() {
+				    	timer.lightTick();
+				    }
+				});
+			}
+		};
+    }
 
 	public void openMenu() {
 		if (!NET) {
