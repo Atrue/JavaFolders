@@ -1,6 +1,6 @@
 package game.engine.characters;
 
-import game.engine.State;
+import game.engine.ServerLink;
 import javafx.scene.paint.Color;
 
 public class ListOfCharacters {
@@ -37,7 +37,7 @@ public class ListOfCharacters {
 	private static void initBuffs(){
 		buffs[0] = new Buff(0.314, 0, 1, 2.0, "i");
 		buffs[1] = new Buff(0, 0.25, 1, 1.0, "*");
-		buffs[2] = new Buff(1, 0, 0.2, 1./State.getFPS(), "!");
+		buffs[2] = new Buff(1, 0, 0.2, 1./ServerLink.getFPS(), "!");
 		buffs[3] = new Buff(0.1, 1, 0.2, 1.2, "&");
 	}
 	private static Buff bWith(int id, double k){

@@ -9,28 +9,22 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import game.MainController;
 import game.MenuNavigator;
-import game.engine.GameController;
 import game.engine.GameManager;
-import game.engine.GameState;
-import game.engine.characters.ListOfCharacters;
-import game.engine.characters.Monster;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 
-public class Network {
+public class Network implements ClientLink{
 	
-	private static NetworkController controller;
+	private NetworkController controller;
 	private static Client client;
 	private static Server server;
 	
-	public static void init() throws IOException{
+	public void init() throws IOException{
 		
 		
 		URL res = GameManager.class.getResource("res/menu/network.fxml");
@@ -39,7 +33,8 @@ public class Network {
 
 		
 		controller = loader.<NetworkController>getController();
-       
+		controller.setParent(this);
+		
 		StackPane p = controller.getStackPane();
         Scene gameScene = new Scene(p);
         gameScene.getStylesheets().add(GameManager.class.getResource("res/menu/menustyle.css").toExternalForm());
@@ -48,37 +43,50 @@ public class Network {
         MenuNavigator.addScene(gameScene, 2);
         MenuNavigator.setScene(2);
 	}
-	public static void createServer(String port){
-		server = new Server(Integer.parseInt(port));
-		controller.connectClient(null);
+	public void createServer(String port, int count){
+		try {
+			server = new Server(Integer.parseInt(port), count);
+			controller.connectClient(null);
+			controller.connectionPack(true);
+		} catch (NumberFormatException e) {
+			controller.putMessage("Error! Порт должен содержать цифры в диапазоне 100-25000");
+			controller.connectionPack(false);
+		} catch (IOException e) {
+			controller.putMessage("Error! Невозможно создать сервер на этом порту");
+			controller.connectionPack(false);
+		}
+		
 	}
 	
-	public static void connectClient(String addr, String port, String name) {
+	public void connectClient(String addr, String port, String name) {
 		if (client == null){
-			client = new Client(addr, Integer.parseInt(port), name, MenuLink());
+			client = new Client(addr, Integer.parseInt(port), name);
+			client.setLink(this);
 			client.start();
+			controller.connectionPack(true);
 		}else{
 			closeConnections();
+			controller.connectionPack(false);
 		}
 		
 	}
 	public static void closeConnections(){
-		if (client == null){
+		if (client != null){
 			client.stop();
 			if (server != null){
 				try {
 					server.stop();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				} catch (IOException e) {}
 			}
 		}
+	}
+	public boolean isServer(){
+		return server != null;
 	}
 	public static Client getClient(){
 		return client;
 	}
-	public static void sendMessage(String text) {
+	public void sendMessage(String text) {
 		if (client != null){
 			try {
 				client.sendMessage(text);
@@ -88,10 +96,10 @@ public class Network {
 			}
 		}
 	}
-	public static void startGame(){
+	public void startGame(){
 		server.startGame();
 	}
-	public static void toMenu(){
+	public void toMenu(){
 		try {
 			if (server != null)
 				server.stop();
@@ -101,67 +109,72 @@ public class Network {
 		}
 		MenuNavigator.setScene(0);
 	}
-	public static NetworkLink MenuLink(){
-		return new NetworkLink(){
-			@Override
-			public void special(String key, Object value) {
-				switch(key){
-				case "server":
-					controller.enableStartButton((boolean)value);
-				}
-			}
-			@Override
-			public void send(String string) {
-				SwingUtilities.invokeLater(new Runnable() {
-				    public void run() {
-				    	controller.putMessage(string);
-				    }
-				});
-			}
-			@Override
-			public void users(String string, boolean b) {
-				Platform.runLater(new Runnable() {
-				    public void run() {
-				    	if (b){
-				    		controller.addUser(string, Color.BLUEVIOLET);
-				    	}else{
-				    		controller.removeUser(string);
-				    	}
-				    }
-				});
-			}
-			@Override
-			public void start(JSONObject object) {
-				Platform.runLater(new Runnable() {
-				    public void run() {
-				    	try {
-							GameManager game = new GameManager();
-							game.setClient(client);
-							game.initialize(1);							
-							game.setConfig(object);
-						} catch (IOException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-				    }
-				});
-			}
-			@Override
-			public void tower(int x, int y, int type, boolean what) {}
-			@Override
-			public void pause(boolean state, String name) {}
-			@Override
-			public void money(int money) {}
-			@Override
-			public void monster(JSONArray jsonArray, boolean b) {}
-			@Override
-			public void endGame(boolean boolean1) {}
-			@Override
-			public void tick() {
-				// TODO Auto-generated method stub
-				
-			}
-		};
+	
+	
+	// As client
+	
+	@Override
+	public void c_special(String key, Object value) {
+		switch(key){
+		case "server":
+			controller.enableStartButton((boolean)value);
+		}
 	}
+	@Override
+	public void c_send(String string) {
+		SwingUtilities.invokeLater(new Runnable() {
+		    public void run() {
+		    	controller.putMessage(string);
+		    }
+		});
+	}
+	@Override
+	public void c_users(int id, String string, boolean b) {
+		Platform.runLater(new Runnable() {
+		    public void run() {
+		    	if (b){
+		    		controller.addUser(id, string);
+		    	}else{
+		    		controller.removeUser(id);
+		    	}
+		    }
+		});
+	}
+	@Override
+	public void c_start(JSONObject object) {
+		Platform.runLater(new Runnable() {
+		    public void run() {
+		    	try {
+					GameManager game = new GameManager();
+					game.setClient(client);
+					game.initialize(1);							
+					game.setConfig(object);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+		    }
+		});
+	}
+	@Override
+	public void c_tower(int x, int y, int type, int who, boolean what) {}
+	@Override
+	public void c_pause(boolean state, String name) {}
+	@Override
+	public void c_money(int money) {}
+	@Override
+	public void c_monster(JSONArray jsonArray, boolean b) {}
+	@Override
+	public void c_endGame(boolean boolean1) {}
+	@Override
+	public void c_tick() {}
+	@Override
+	public void c_buff(int id, int towerX, int towerY) {}
+	@Override
+	public void c_upgrade(int int1, int int2) {
+		// TODO Auto-generated method stub
+		
+	}
+};
 
-}
+

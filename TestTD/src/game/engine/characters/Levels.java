@@ -3,20 +3,16 @@ package game.engine.characters;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-import game.engine.Coordinate;
-import game.engine.GameManager;
-import game.engine.GameState;
-import game.engine.State;
-import game.network.NetworkState;
+import game.engine.ServerLink;
 
 public class Levels {
-	private State parent;
+	private ServerLink parent;
 	
 	private int levels = 50;
 	private Iterator<Wave> iterWave;
 	private Wave current;
 	private double timeWaveOut = 0.4;
-	public Levels(State gm){
+	public Levels(ServerLink gm){
 		parent = gm;
 		ArrayList<Wave> waves = new ArrayList<>();
 		for(int i=0;i<levels;i++){
@@ -36,7 +32,7 @@ public class Levels {
 		if (current.isExist()){
 			current.update(timeWaveOut);
 			if (current.canBeGetting()){
-				parent.createMonsters(current.getMonster());
+				parent.s_createMonsters(current.getMonster());
 			}
 		}
 		
@@ -85,7 +81,7 @@ public class Levels {
 			return count;
 		}
 		public double getTick(){
-			return 1./State.getFPS();
+			return 1./ServerLink.getFPS();
 		}
 		public Monster getMonster(){
 			if (count > 0){

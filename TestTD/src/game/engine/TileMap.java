@@ -1,8 +1,14 @@
 package game.engine;
 
-import javafx.scene.image.*;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.image.PixelReader;
+import javafx.scene.image.PixelWriter;
+import javafx.scene.image.WritableImage;
+import javafx.scene.image.WritablePixelFormat;
 
 //responsible for painting the map for the client and tracking nodes
 

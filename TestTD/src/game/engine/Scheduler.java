@@ -3,29 +3,27 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 import game.engine.characters.Monster;
-import game.engine.characters.Projectile;
 import game.engine.characters.Tower;
-import game.network.NetworkState;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.util.Duration;
 public class Scheduler{
 	private final int WAVE_TIME = 25;
-	private GameManager parent;
+	private ServerLink parent;
 	private Timeline timeline;
 	private double gametime = 0;
-	public Scheduler(GameManager manager, boolean light){
+	public Scheduler(ServerLink manager, boolean light){
 		this.parent = manager;
 		KeyFrame frame;
 		if (!light){
 			frame = new KeyFrame(
-	    			Duration.millis(1000 / State.getFPS()),
+	    			Duration.millis(1000 / ServerLink.getFPS()),
 	    			tick -> tick()
 	    			);
 		}else{
 			frame = new KeyFrame(
-	    			Duration.millis(1000 / State.getFPS()),
+	    			Duration.millis(1000 / ServerLink.getFPS()),
 	    			tick -> lightTick()
 	    			);
 		}
@@ -34,7 +32,7 @@ public class Scheduler{
 	}
 	
 	public double getTick(){
-		return 1./State.getFPS();
+		return 1./ServerLink.getFPS();
 	}
 	public void notifyTimer(){
 		gametime = WAVE_TIME;
@@ -53,24 +51,22 @@ public class Scheduler{
 		updateLevels();
 		updateLocations();
 		updateTowers();
-		updateLabels();
 		if (gametime <= 0){
-			if (GameState.getLevels().hasNext()){
-				parent.levelUp();
-				GameState.setLevel(GameState.getLevel() + 1);
-		    	GameState.getLevels().nextWave();
+			if (parent.s_getConfigurations().getLevels().hasNext()){
+				parent.s_levelUp();
 				gametime = WAVE_TIME;
 			}else{
-				if (GameState.getMonstersAlive().size() == 0)
-					parent.endGame(true);
+				if (parent.s_getConfigurations().getMonstersAlive().size() == 0)
+					parent.s_endGame(true);
 			}
 		}
+		updateLabels();
 	}
 	public int getGameTime(){
 		return (int)gametime;
 	}
 	public void start(){
-		if (!GameState.isStopped())
+		if (!parent.s_getConfigurations().isStopped())
 			timeline.play();
 		else 
 			System.err.println("Game is stopped");
@@ -80,26 +76,26 @@ public class Scheduler{
 	}
 	
 	private void updateLevels(){
-		GameState.getLevels().update();
+		parent.s_getConfigurations().getLevels().update();
 	}
 	@SuppressWarnings("unchecked")
 	private void updateLocations(){
 		
-		ArrayList<Monster> monsters = (ArrayList<Monster>) GameState.getMonstersAlive().clone();
+		ArrayList<Monster> monsters = (ArrayList<Monster>) parent.s_getConfigurations().getMonstersAlive().clone();
 		for (Iterator<Monster> iterator = monsters.iterator(); iterator.hasNext();) {
     		Monster monster = iterator.next();
     		monster.update();
     	}
     }
 	private void updateTowers(){
-		if(!GameState.getPlayerTowers().isEmpty()){
-			for (Tower tower:GameState.getPlayerTowers()){
+		if(!parent.s_getConfigurations().getPlayerTowers().isEmpty()){
+			for (Tower tower:parent.s_getConfigurations().getPlayerTowers()){
 				tower.update();
 			}
 		}
 	}
 	private void updateLabels(){
-		parent.updateLabels();
+		parent.s_updateLabels();
 	
 	}
 }

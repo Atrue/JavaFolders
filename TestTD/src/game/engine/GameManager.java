@@ -1,8 +1,7 @@
 package game.engine;
 
-
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Date;
 import java.util.Optional;
 
 import org.json.JSONArray;
@@ -16,437 +15,638 @@ import game.engine.characters.Monster;
 import game.engine.characters.Projectile;
 import game.engine.characters.Tower;
 import game.network.Client;
+import game.network.ClientLink;
 import game.network.Network;
-import game.network.NetworkLink;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Group;
+import javafx.geometry.Point2D;
 import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.DatePicker;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
+import javafx.stage.Popup;
+import javafx.util.Duration;
 
+import java.util.Date;
+
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.geometry.Point2D;
+import javafx.scene.Parent;
+import javafx.scene.control.Button;
+import javafx.scene.layout.VBox;
+import javafx.stage.Popup;
 /**
  * Responsible for all communications between user interface and underlying
  * frameworks. The initialize method starts the game loop when called through
  * creating or loading a game.
  */
-public class GameManager implements State{
-	private  GameController gameController;			// Handles fxml attributes (buttons and labels)
+public class GameManager implements ServerLink, ClientLink {
+	private GameController gameController; // Handles fxml attributes 
+	private Configurations config;
 	private Scheduler timer;
 	private boolean NET;
-	
-	
-	
-    private  Scene gameScene;                       // The main viewport
-	private int[][] map;
-	private Group group;
+
+	private Scene gameScene;
 	private Client client;
-             
-	//private Group tilemapGroup;
+
+	// private Group tilemapGroup;
+	private Tower target;
+	// private Label hoverTower;
+	/**
+	 * Initializes the game
+	 *
+	 * @throws java.io.IOException
+	 */
+	public void initialize(int type) throws java.io.IOException {
+		NET = type == 0 ? false : true;
+		// Initializes the game state
+		config = new Configurations();
+		config.init(this, type, 0);
+
+		// Creates gui hierarchy
+		FXMLLoader loader = new FXMLLoader(MenuNavigator.GAMEUI);
+		// Opens stream to get controller reference
+		Node gameUI = (Node) loader.load(MenuNavigator.GAMEUI.openStream());
+		gameController = loader.<GameController> getController();
+		gameController.setGameManager(this);
+		// Generates the map with the given resolution
+		StackPane gamePane = new StackPane();
+		gamePane.getChildren().add(gameController.getGeneralLayout());
+		config.setParentView(gameController.getGeneralLayout());
+
+		gamePane.getChildren().add(gameUI);
+		gameScene = new Scene(gamePane);
+		gameScene.getStylesheets().add(GameManager.class.getResource("res/menu/gamestyle.css").toExternalForm());
+
+		gameController.setListeners();
+		gameController.setNetPane(type == 1);
+		gameController.setTooltips();
+		if (!ListOfCharacters.isinit())
+			ListOfCharacters.init();
+
+		MenuNavigator.addScene(gameScene, 1);
+		MenuNavigator.setScene(1);
+		// MenuNavigator.stage.setScene(gameScene);
+
+		Projectile.setParentView(gameController.getGeneralLayout());
+		Monster.setParentView(gameController.getGeneralLayout());
+		Tower.setParentView(gameController.getGeneralLayout());
+
+		Levels levels = new Levels(this);
+		config.setLevels(levels);
+		config.initPath();
+
+		startGameLoop(type);
+
+		s_updateLabels();
+		
+		
+	    
+	}
+
 	
-	//private Label hoverTower;
-    /**
-     * Initializes the game
-     *
-     * @throws java.io.IOException
-     */
-    public void initialize(int type) throws java.io.IOException{
-    	NET = type == 0? false: true;
-        // Initializes the game state
-        GameState.init(this, type);
-        
-        // Creates gui hierarchy
-        FXMLLoader loader = new FXMLLoader(MenuNavigator.GAMEUI);
-        // Opens stream to get controller reference
-        Node gameUI = (Node)loader.load(MenuNavigator.GAMEUI.openStream()); 
-        gameController = loader.<GameController>getController();
-        gameController.setGameManager(this);
-        // Generates the map with the given resolution
-        StackPane gamePane = new StackPane();
-        gamePane.getChildren().add(gameController.getGeneralLayout());
-    	GameState.setParentView(gameController.getGeneralLayout());
-        
-       
-        gamePane.getChildren().add(gameUI);
-        gameScene = new Scene(gamePane);
-        gameScene.getStylesheets().add(GameManager.class.getResource("res/menu/gamestyle.css").toExternalForm());
-        
-        gameController.setListeners();
-        gameController.setNetPane(type == 1);
-        gameController.setTooltips();
-        if (!ListOfCharacters.isinit())
-        	ListOfCharacters.init();
-        
-        
-        MenuNavigator.addScene(gameScene, 1);
-        MenuNavigator.setScene(1);
-        //MenuNavigator.stage.setScene(gameScene);
-        
-        Projectile.setParentView(gameController.getGeneralLayout());
-        Monster.setParentView(gameController.getGeneralLayout());
-        Tower.setParentView(gameController.getGeneralLayout());
-        
-        Levels levels = new Levels(this);
-        GameState.setLevels(levels);
-        GameState.initPath();
-        
-        startGameLoop(type);
-       
-        updateLabels();
-    }
-    public void setConfig(JSONObject json){
-    	try {
-			GameState.setMap(json.getJSONArray("map"));
-			GameState.setLives(json.getInt("lives"));
+	public class SimpleCalendar extends VBox {
+
+		  private Popup popup;
+		  final DatePicker datePicker;
+		 
+		  public SimpleCalendar() {
+		    popup = new Popup();
+		    popup.setAutoHide(true);
+		    popup.setAutoFix(true);
+		    popup.setHideOnEscape(true);
+
+		    datePicker = new DatePicker();
+		    popup.getContent().add(datePicker);
+
+		    final Button calenderButton = new Button();
+		    calenderButton.setId("CalenderButton");
+		    calenderButton.setOnAction(new EventHandler<ActionEvent>() {
+
+		      @Override
+		      public void handle(ActionEvent ae) {
+		        Parent parent = SimpleCalendar.this.getParent();
+		        // Popup will be shown at upper left corner of calenderbutton
+		        Point2D point = calenderButton.localToScene(0, 0);
+		        final double layoutX = parent.getScene().getWindow().getX() + parent.getScene().getX() + point.getX();
+		        final double layoutY = parent.getScene().getWindow().getY() + parent.getScene().getY() + point.getY();
+		        popup.show(SimpleCalendar.this, layoutX, layoutY);
+
+		      }
+		    });
+		   
+		    getChildren().add(calenderButton);
+		  }
+	}
+	
+	
+	
+	public void setConfig(JSONObject json) {
+		try {
+			config.setMap(json.getJSONArray("map"));
+			config.setLives(json.getInt("lives"));
+			config.setResources(json.getInt("money"));
+			gameController.repaintBG(config.getMap());
+			s_updateLabels();
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-    }
+	}
 
-    public GameController getController(){
-    	return gameController;
-    }
-    public  Scene getGameScene(){
-        return gameScene;
-    }
-    
-    
-    
-    public boolean transition(int money){
-    	if (GameState.getResources() - money >= 0){
-    		GameState.setResources(GameState.getResources() - money);
-    		return true;
-    	}
-    	return false;
-    }
-    // level up
-    public void levelUp(){
-    	GameState.setLevel(GameState.getLevel() + 1);
-    	GameState.getLevels().nextWave();
-    }
-    // buy tower;
-    public boolean buyTower(int type, double xCords , double yCords){
-        // Convert the clicked coordinates to a tile coordinate
-        int xTile = (int)(xCords / 32);
-        int yTile = (int)(yCords / 32);
+	public GameController getController() {
+		return gameController;
+	}
 
-        if(!NET){
-	        // Verify the user can afford the tower
-	    	Tower tower = ListOfCharacters.getTower(type, 0);
-	        if(GameState.getResources() >= tower.getPrice()) {
-	        	if (GameState.tryMapNode(xTile, yTile, 3)){
-		        	addTower(xTile, yTile, type);
-		        	GameState.setResources(GameState.getResources() - tower.getPrice());
-	        		return true;
-	        	}
-	        }
-	        return false;
-        }else{
-        	try {
+	public Scene getGameScene() {
+		return gameScene;
+	}
+	
+
+	
+	public Tower getTarget(){
+		return target;
+	}
+
+	public void setTarget(Tower object) {
+		target = object;
+	}
+
+	public boolean transition(int money) {
+		if (config.getResources() - money >= 0) {
+			config.setResources(config.getResources() - money);
+			return true;
+		}
+		return false;
+	}
+
+	// buy tower;
+	public void tryBuyTower(int type, double xCords, double yCords) {
+		// Convert the clicked coordinates to a tile coordinate
+		int xTile = (int) (xCords / 32);
+		int yTile = (int) (yCords / 32);
+		
+		if (!config.nodeOpen(xTile, yTile))
+			return;
+		
+		if (!NET) {
+			// Verify the user can afford the tower
+			Tower tower = ListOfCharacters.getTower(type, 0);
+			if (config.getResources() >= tower.getPrice()) {
+				if (config.tryMapNode(xTile, yTile, 3)) {
+					addTower(xTile, yTile, type, 0);
+					config.setResources(config.getResources() - tower.getPrice());
+				}else{
+					gameController.showBlockedPop(xCords, yCords);
+				}
+			}
+		} else {
+			try {
 				client.buyTower(xTile, yTile, type);
 			} catch (JSONException | IOException e) {
 				e.printStackTrace();
 			}
-        	return false;
-        }
-    }
-    private void addTower(int x,int y,int type){
-    	GameState.setMapNode(x, y, 3);
-    	Tower tower = ListOfCharacters.getTower(type, 0);
-    	Tower buyTower = Tower.copy(tower);
-    	GameState.addTower(buyTower);
-    	buyTower.add(x, y, this, true);
-    }
-    // get tower by coords
-    public Tower getTower(double xCords , double yCords){
-        Coordinate clickedTiled = new Coordinate(xCords , yCords);
-        // Find tower with matching coordinate
-        for(Tower tower : GameState.getPlayerTowers()){
-            if(tower.getCoords().equals(clickedTiled)){
-                return tower;
-            }
-        }
-        return null;
-    }
-    //??
-    public void upgradeTower(Tower tower){
-    	if(tower.isUpgradeable()){
-    		if (transition(tower.upgradePrice()))
-    			tower.upgradeTower();
-    	}else{
-    		System.err.println("Upgrade notupgradable");
-    	}
-    }
-    public void sellTower(Tower tower){
-    	if (GameState.tryMapNode(tower.getTileX(), tower.getTileY(), 0)){
-    		GameState.getPlayerTowers().remove(tower);
-    		transition(-tower.getSellCost());
-    		tower.remove();
-    	}
-    	
-    }
-
-    // add monster
-    public void createMonsters(Monster monster){
-    	for(Coordinate c: GameState.getStartCords()){
-			monster.addVariancy();
-			monster.add(c, this, true, true);
-	    	GameState.addMonster(monster);
 		}
-    }
-    public void addMonsterWith(double vx, double vy, int hash, int index){
-    	Monster monster = GameState.getLevels().getWave().get_copy();
-    	monster.addVariancy(vx, vy, hash);
-    	monster.add(GameState.getStartCords().get(index), this, true, false);
-    	System.out.println(index+":"+monster.getTileX()+"/"+monster.getTileY()+" "+monster.getVariancyX()+"|"+monster.getVariancyY());
-    	GameState.addMonster(monster);
-    	
-    }
-
-    
-    public void updateLabels() {
-
-        gameController.updateLabels(
-            Integer.toString(GameState.getLevel()) ,
-            Integer.toString(GameState.getLives()) ,
-            Integer.toString(GameState.getResources()) ,
-            Integer.toString(timer.getGameTime())
-        		);
-        gameController.updateBuyers();
-        if (GameState.getTarget() != null){
-        	gameController.updateTarget(
-        		GameState.getTarget().getLevel(),
-            	GameState.getTarget().getAttackDamage(),
-                GameState.getTarget().getAttackRange(),
-                GameState.getTarget().getAttackCD(),
-                GameState.getTarget().upgradePrice(),
-                GameState.getTarget().getSellCost(),
-                GameState.getTarget().getBuff() != null ? 
-                		"["+GameState.getTarget().getBuff().getId()+"]" : "",
-                GameState.getTarget().getBuff() != null ?
-                		GameState.getTarget().getBuff().getDesc() : ""
-            );
-        }
 	}
-    public void sendMessage(String text) throws JSONException, IOException{
-    	if(NET){
-    		client.sendMessage(text);
-    	}
-    }
-    public void tryPause() throws JSONException, IOException{
-    	if (!NET){
-    		int state = GameState.isPaused()? GameState.IS_RUNNING: GameState.IS_PAUSED;
-    		doPause(state);
-    		if (state != GameState.IS_PAUSED){
-        		timer.start();
-        	}else{
-        		timer.stop();    		
-        	}
-    	}else{
-    		JSONObject json = new JSONObject();
-    		json.put("event", "pause");
-    		json.put("state", GameState.getState() != GameState.IS_PAUSED);
-    		client.send(json);
-    	}
-    }
-    private void doPause(int state){
-    	GameState.setState(state);
-    	gameController.setPauseView(state == GameState.IS_PAUSED);
-    	
-    }
 
+	private void addTower(int x, int y, int type, int who) {
+		config.tryMapNode(x, y, 3);
+		gameController.repaintBG(config.getMap());
+		Tower tower = ListOfCharacters.getTower(type, 0);
+		Tower buyTower = Tower.copy(tower);
+		config.addTower(buyTower);
+		buyTower.add(x, y, this, true, !NET);
+		buyTower.setOwner(who);
+	}
 
-    /**
-     * Removes a monster from the graphical interface and from the reference
-     * list. The player is rewarded if they defeated the monster or punished
-     * if the monster finished the path.
-     *
-     * @param monster
-     * The monster to remove from the game.
-     */
-    public void removeMonster(int id, boolean isKilled){
-    	for(Monster m:GameState.getMonstersAlive()){
-    		if(m.getID() == id){
-    			removeMonster(m, isKilled);
-    			break;
-    		}
-    	}
-    }
-    public void removeMonster(Monster monster, boolean isKilled){
-    	if (GameState.getMonstersAlive().contains(monster)){
-	        // Punish player
-	        if (!isKilled){
-	        	GameState.setLives((GameState.getLives()) - 1);
-	        }
-	        // Reward player
-	        else{
-	        	GameState.setResources((GameState.getResources()) + monster.getReward());
-	        }
-	        GameState.getMonstersAlive().remove(monster);
-    	}
+	// get tower by coords
+	public Tower getTower(double xCords, double yCords) {
+		Coordinate clickedTiled = new Coordinate(xCords, yCords);
+		// Find tower with matching coordinate
+		for (Tower tower : config.getPlayerTowers()) {
+			if (tower.getCoords().equals(clickedTiled)) {
+				return tower;
+			}
+		}
+		return null;
+	}
+	// get tower by coords
+	public Tower getTower(int xCords, int yCords) {
+		Coordinate clickedTiled = new Coordinate(xCords, yCords);
+		// Find tower with matching coordinate
+		for (Tower tower : config.getPlayerTowers()) {
+			if (tower.getCoords().equals(clickedTiled)) {
+				return tower;
+			}
+		}
+		return null;
+	}
+	
 
-    }
+	// ??
+	public void tryUpgradeTower(Tower tower) {
+		if (!NET){
+			if (transition(tower.upgradePrice()))
+				upgradeTower(tower.getTileX(), tower.getTileY());
+		}else{
+			try {
+				client.upgradeTower(tower.getTileX(), tower.getTileY());
+			} catch (JSONException | IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	private void upgradeTower(int x, int y){
+		Tower tower = getTower(x, y);
+		if (tower.isUpgradeable()) {			
+			tower.upgradeTower();
+		} else {
+			System.err.println("Upgrade notupgradable");
+		}
+	}
 
-    /**
-     * GAME LOOP
-     *
-     * Responsible for all graphical updates, including playing
-     * animations and updating monster locations.
-     */
-    private void startGameLoop(int type) {
-    	
-    	timer = new Scheduler(this, type == 1);
-    	if (type > 0){
-    		client.setLink(getLink());
-    	}
-    }
-    private NetworkLink getLink(){
-    	return new NetworkLink(){
-			@Override
-			public void special(String key, Object value) {
-				Platform.runLater(new Runnable() {
-				    public void run() {
-	    				switch(key){
-	    					case "level":{
-	    						GameState.setLevel((int)value);
-	    						GameState.getLevels().nextWave();
-	    						timer.notifyTimer();
-	    						break;
-	    					}
-	    				}
-				    }
-				});
+	public void trySellTower(Tower tower) {
+		if (!NET){
+			removeTower(tower.getTileX(), tower.getTileY());
+			transition(-tower.getSellCost());
+		}else{
+			try {
+				client.sellTower(tower.getTileX(), tower.getTileY());
+			} catch (JSONException | IOException e) {
+				e.printStackTrace();
 			}
-			@Override
-			public void send(String string) {
-				gameController.appendMessage(string);
+		}
+
+	}
+	public void removeTower(int x, int y){
+		config.tryMapNode(x, y, 0);		
+		gameController.repaintBG(config.getMap());
+		Tower tower = getTower(x, y);
+		tower.remove();
+		config.removeTower(tower);
+	}
+	public void addMonsterWith(double vx, double vy, int hash, int index) {
+		Monster monster = config.getLevels().getWave().get_copy();
+		monster.addVariancy(vx, vy, hash);
+		monster.add(config.getStartCords().get(index), this, true, false);
+		config.addMonster(monster);
+
+	}
+
+	
+	public void sendMessage(String text) throws JSONException, IOException {
+		if (NET) {
+			client.sendMessage(text);
+		}
+	}
+
+	public void tryPause() throws JSONException, IOException {
+		if (config.isStopped())
+			return;
+		if (!NET) {
+			int state = config.isPaused() ? config.IS_RUNNING : config.IS_PAUSED;
+			doPause(state);
+			if (state != config.IS_PAUSED) {
+				timer.start();
+			} else {
+				timer.stop();
 			}
-			@Override
-			public void users(String string, boolean b) {}
-			@Override
-			public void start(JSONObject object) {}
-			@Override
-			public void tower(int x, int y, int type, boolean what) {
-				Platform.runLater(new Runnable() {
-				    public void run() {
-				    	if (what){
-							addTower(x,y, type);
-						}
-				    }
-				});
+		} else {
+			JSONObject json = new JSONObject();
+			json.put("event", "pause");
+			json.put("state", config.getState() != config.IS_PAUSED);
+			client.send(json);
+		}
+	}
+
+	private void doPause(int state) {
+		config.setState(state);
+		gameController.setPauseView(state == config.IS_PAUSED);
+
+	}
+
+	/**
+	 * Removes a monster from the graphical interface and from the reference
+	 * list. The player is rewarded if they defeated the monster or punished if
+	 * the monster finished the path.
+	 *
+	 * @param monster
+	 *            The monster to remove from the game.
+	 */
+	public Monster getMonster(int id){
+		for (Monster m : config.getMonstersAlive()) {
+			if (m.getID() == id) {
+				return m;
 			}
-			@Override
-			public void pause(boolean state, String name) {
-				doPause(state? GameState.IS_PAUSED: GameState.IS_RUNNING);
-				gameController.appendMessage(name);
-			}
-			@Override
-			public void money(int money) {
-				Platform.runLater(new Runnable() {
-				    public void run() {
-				    	GameState.setResources(money);
-				    }
-				});
-				
-			}
-			@Override
-			public void monster(JSONArray jsonArray, boolean b) {
-				Platform.runLater(new Runnable() {
-				    public void run() {
-				    	try {
-				    		for(int i=0;i<jsonArray.length();i++){
-				    			JSONObject vari = jsonArray.getJSONObject(i);
-				    			if (b){
-				    				addMonsterWith(vari.getDouble("vx"), vari.getDouble("vy"), vari.getInt("id"), i);
-				    			}else{
-				    				removeMonster(vari.getInt("id"), vari.getBoolean("state"));
-				    			}
-				    		}
-						} catch (JSONException e) {
-							e.printStackTrace();
-						}
-				    }
-				});
-			}
-			@Override
-			public void endGame(boolean boolean1) {
-				// TODO Auto-generated method stub
-				
-			}
-			@Override
-			public void tick() {
-				Platform.runLater(new Runnable() {
-				    public void run() {
-				    	timer.lightTick();
-				    }
-				});
-			}
-		};
-    }
+		}
+		return null;
+	}
+	public void removeMonster(int id, boolean isKilled, int who) {
+		Monster m = getMonster(id);
+		if (m != null){
+			m.remove(isKilled, who);
+			config.removeMonster(m);
+		}
+	}
+
+	/**
+	 * GAME LOOP
+	 *
+	 * Responsible for all graphical updates, including playing animations and
+	 * updating monster locations.
+	 */
+	private void startGameLoop(int type) {
+
+		timer = new Scheduler(this, type == 1);
+		if (type > 0) {
+			client.setLink(this);
+		}
+	}
 
 	public void openMenu() {
 		if (!NET) {
 			timer.stop();
 			MenuNavigator.setScene(0);
-		}else{
-			alertDialog("Открыть меню", "Выход в меню отключит вас от текущей игры", "Если вы хотите отключиться от игры\nи выйти в меню, нажмите ОК");
-			
+		} else {
+			alertDialog("Открыть меню", "Выход в меню отключит вас от текущей игры",
+					"Если вы хотите отключиться от игры\nи выйти в меню, нажмите ОК");
+
 		}
-		
+
 	}
-	
-	private void alertDialog(String title, String header, String content){
+
+	private void alertDialog(String title, String header, String content) {
 		Alert alert = new Alert(AlertType.CONFIRMATION);
 		alert.setTitle(title);
 		alert.setHeaderText(header);
 		alert.setContentText(content);
 
 		Optional<ButtonType> result = alert.showAndWait();
-		if (result.get() == ButtonType.OK){
-		    Network.closeConnections();
-		    MenuNavigator.setScene(0);
+		if (result.get() == ButtonType.OK) {
+			Network.closeConnections();
+			MenuNavigator.setScene(0);
+		} else {
+			// ... user chose CANCEL or closed the dialog
+		}
+	}
+	
+	private void engGameDialog(Boolean b) {
+		Alert alert = new Alert(AlertType.INFORMATION);
+		alert.setTitle("Конец игры!");
+		alert.setHeaderText(b? "Неплохо!": "Плохо!");
+		alert.setContentText(b? "Вы выиграли и прошли всю игру.": "Вы проиграли. Можете попробовать еще раз.");
+
+		ButtonType buttonTypeOne = new ButtonType("Меню");
+		ButtonType buttonTypeTwo = new ButtonType("Выход");
+		ButtonType buttonTypeCancel = new ButtonType("Закрыть", ButtonData.CANCEL_CLOSE);
+
+		alert.getButtonTypes().setAll(buttonTypeOne, buttonTypeTwo, buttonTypeCancel);
+
+		Optional<ButtonType> result = alert.showAndWait();
+		if (result.get() == buttonTypeOne){
+			Network.closeConnections();
+			MenuNavigator.setScene(0);
+		} else if (result.get() == buttonTypeTwo) {
+			System.exit(1);
 		} else {
 		    // ... user chose CANCEL or closed the dialog
 		}
 	}
-	
 
-	public void endGame(boolean st) {
-		GameState.setState(GameState.IS_STOPPED);
-		gameController.setPauseView(GameState.isPaused());
-		timer.stop();
-		MenuNavigator.setResultGame(st);
-		MenuNavigator.setScene(0);
-	}
-	
 	public void setClient(Client client) {
 		this.client = client;
 	}
+
+	// AS SERVER
+
+	public void s_endGame(boolean st) {
+		config.setState(config.IS_STOPPED);
+		gameController.setPauseView(config.isPaused());
+		timer.stop();
+		Platform.runLater(new Runnable() {
+			@Override
+			public void run() {
+				engGameDialog(st);
+			}
+		});
+		
+	}
+
+	@Override
+	public void s_addBuff(int id, int tileX, int tileY) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void s_createMonsters(Monster moncopy) {
+		for (Coordinate c : config.getStartCords()) {
+			Monster monster = Monster.copy(moncopy);
+			monster.addVariancy();
+			monster.add(c, this, true, true);
+			config.addMonster(monster);
+		}
+	}
+
+	@Override
+	public void s_levelUp() {
+		config.setLevel(config.getLevel() + 1);
+		config.getLevels().nextWave();
+	}
+
+	@Override
+	public void s_removeMonster(Monster monster, boolean isKilled, int who) {
+		if (config.getMonstersAlive().contains(monster)) {
+			// Punish player
+			if (!isKilled) {
+				config.setLives((config.getLives()) - 1);
+				if (config.getLives() == 0){
+					s_endGame(false);
+				}
+			}
+			// Reward player
+			else {
+				config.setResources((config.getResources()) + monster.getReward());
+			}
+			config.getMonstersAlive().remove(monster);
+		}
+	}
+	
+	@Override
+	public void s_updateLabels() {
+
+		gameController.updateLabels(Integer.toString(config.getLevel()),
+				Integer.toString(config.getLives()), Integer.toString(config.getResources()),
+				Integer.toString(timer.getGameTime()));
+		gameController.updateBuyers();
+		if (target != null) {
+			gameController.updateTarget(target.getLevel(),
+					target.getAttackDamage(), target.getAttackRange(),
+					target.getAttackCD(), target.upgradePrice(),
+					target.getSellCost(),
+					target.getBuff() != null
+							? "[" + target.getBuff().getId() + "]" : "",
+									target.getBuff() != null ? target.getBuff().getDesc() : "");
+		}
+	}
+	
+	@Override
+	public Configurations s_getConfigurations(){
+		return config;
+	}
+	
+
+	@Override
+	public void s_debug(String string) {
+		System.out.println(string);
+	}
 	
 	
+	// As client
+
 	@Override
-	public ArrayList<Coordinate> getStartCords() {
-		return GameState.getStartCords();
+	public void c_special(String key, Object value) {
+		Platform.runLater(new Runnable() {
+			public void run() {
+				switch (key) {
+				case "level": {
+					config.setLevel((int) value);
+					config.getLevels().nextWave();
+					timer.notifyTimer();
+					break;
+				}
+				case "lives":{
+					config.setLives((int)value);
+					break;
+				}
+				}
+			}
+		});
 	}
+
 	@Override
-	public int getDirection(int tileX, int tileY) {
-		// TODO Auto-generated method stub
-		return GameState.getDirection(tileX, tileY);
+	public void c_send(String string) {
+		gameController.appendMessage(string);
 	}
+
 	@Override
-	public Coordinate getNextCoord(int tileX, int tileY) {
-		// TODO Auto-generated method stub
-		return GameState.getNextCoord(tileX, tileY);
+	public void c_users(int id, String string, boolean b) {
 	}
+
 	@Override
-	public ArrayList<Monster> getMonstersAlive() {
-		// TODO Auto-generated method stub
-		return GameState.getMonstersAlive();
+	public void c_start(JSONObject object) {
 	}
-	
+
+	@Override
+	public void c_tower(int x, int y, int type, int who, boolean what) {
+		Platform.runLater(new Runnable() {
+			public void run() {
+				if (what) {
+					addTower(x, y, type, who);
+				}else{
+					removeTower(x, y);
+				}
+			}
+		});
+	}
+
+	@Override
+	public void c_pause(boolean state, String name) {
+		doPause(state ? config.IS_PAUSED : config.IS_RUNNING);
+		gameController.appendMessage(name);
+	}
+
+	@Override
+	public void c_money(int money) {
+		Platform.runLater(new Runnable() {
+			public void run() {
+				config.setResources(money);
+				s_updateLabels();
+			}
+		});
+
+	}
+
+	@Override
+	public void c_monster(JSONArray jsonArray, boolean b) {
+		Platform.runLater(new Runnable() {
+			public void run() {
+				try {
+					for (int i = 0; i < jsonArray.length(); i++) {
+						JSONObject vari = jsonArray.getJSONObject(i);
+						if (b) {
+							addMonsterWith(vari.getDouble("vx"), vari.getDouble("vy"), vari.getInt("id"), i);
+						} else {
+							removeMonster(vari.getInt("id"), vari.getBoolean("state"), vari.getInt("who"));
+						}
+					}
+				} catch (JSONException e) {
+					e.printStackTrace();
+				}
+			}
+		});
+	}
+
+	@Override
+	public void c_endGame(boolean boolean1) {
+		Platform.runLater(new Runnable() {
+			public void run() {
+				s_endGame(boolean1);
+			}
+		});
+	}
+
+	@Override
+	public void c_tick() {
+		Platform.runLater(new Runnable() {
+			public void run() {
+				timer.lightTick();
+			}
+		});
+	}
+
+	@Override
+	public void c_buff(int id, int towerX, int towerY) {
+		Monster mon = getMonster(id);
+		if(mon != null){
+			Tower tower = getTower(towerX, towerY);
+			if (tower != null)
+				mon.addBuff(tower.getBuff());
+			else
+				System.err.println("NO TOWER WITH ["+towerX+","+towerY+"]");
+		}else{
+			System.err.println("NO MONSTER WITH ["+id+"]");
+		}
+	}
+
+	@Override
+	public void c_upgrade(int int1, int int2) {
+		Platform.runLater(new Runnable() {
+			public void run() {
+				upgradeTower(int1, int2);
+			}
+		});
+	}
+
 
 }

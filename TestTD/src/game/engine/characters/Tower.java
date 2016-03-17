@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 import game.engine.Coordinate;
-import game.engine.State;
+import game.engine.ServerLink;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
@@ -22,7 +22,7 @@ public class Tower extends TextFlow{
     private static Pane view;
     private int ownerID;
     private String ownerName;
-    private State parent;
+    private ServerLink parent;
     
 	private Text tName;
 	private Text tLevel;
@@ -99,14 +99,14 @@ public class Tower extends TextFlow{
     public static void setParentView(Pane v){
     	view = v;
     }
-    public void add(int x , int y, State par, boolean visible, boolean activity){
+    public void add(int x , int y, ServerLink par, boolean visible, boolean activity){
     	coords = new Coordinate(x , y);
     	parent = par;
     	isGUI = visible;
     	hasActivity = activity;
     	if (isGUI){
 	    	updateLabels();
-	        setId("tower_state");
+	        setId("tower_state");	        
 	        setPrefWidth(32);  
 	        setPrefHeight(32); 
 	        setHeight(32);
@@ -116,9 +116,12 @@ public class Tower extends TextFlow{
 	    	view.getChildren().add(this);
     	}
     }
-    public void setOwner(int id, String name){
+    public void setOwner(int id){
     	ownerID = id;
-    	ownerName = name;
+    	getStyleClass().add("towerBG_"+id);
+    	if (buff != null){
+    		buff.setOwnerID(ownerID);
+    	}
     }
     public void remove(){
     	for(Projectile prj:projectileList){
@@ -143,13 +146,13 @@ public class Tower extends TextFlow{
     	return this.timeout == 0;
     }
     public double getTick(){
-		return 1./State.getFPS();
+		return 1./ServerLink.getFPS();
 	}
     public void update(){
     	if (timeout > 0){
     		timeout = timeout - getTick() > 0? timeout - getTick():0;
     	}else{
-	    	for (Monster monster:parent.getMonstersAlive()){
+	    	for (Monster monster:parent.s_getConfigurations().getMonstersAlive()){
 	    		if (inRange(monster)){
 	    			createProjectile(monster);
 	    			timeout = attackCD;
@@ -161,9 +164,9 @@ public class Tower extends TextFlow{
     		Projectile projectile = iterator.next();
     		if (!projectile.update()){
     			if(buff != null && projectile.getTarget() != null && buff.getLuck()){
-    				projectile.getTarget().addBuff(buff);
     				if (hasActivity){
-    					parent.addBuff(projectile.getTarget().getID(), getTileX(), getTileY());
+    					projectile.getTarget().addBuff(buff);
+    					parent.s_addBuff(projectile.getTarget().getID(), getTileX(), getTileY());
     				}
         		}
     			projectile.remove();
@@ -296,6 +299,10 @@ public class Tower extends TextFlow{
     
     public Buff getBuff(){
     	return buff;
+    }
+    
+    public void setGUIlable(boolean b){
+    	this.isGUI = b;
     }
     public void setAttackDamage(int attackDamage){
         this.attackDamage = attackDamage;

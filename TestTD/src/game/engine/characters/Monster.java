@@ -10,7 +10,7 @@ import java.util.Iterator;
  */
 
 import game.engine.Coordinate;
-import game.engine.State;
+import game.engine.ServerLink;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
@@ -19,9 +19,11 @@ import javafx.scene.text.Font;
 
 public class Monster {
 	private static Pane parentView;
-	private State parent;
+	private ServerLink parent;
     private boolean isGUI;
     private boolean hasActivity;
+    
+    private boolean isDied = false;
     
     private int ID;
 	
@@ -67,7 +69,7 @@ public class Monster {
     	Monster to = new Monster(from.maxHP, from.maxSpeed, from.reward, from.type);
     	return to;
     }
-    public void add(Coordinate start, State pa, boolean visible, boolean activ){
+    public void add(Coordinate start, ServerLink pa, boolean visible, boolean activ){
         isGUI = visible;
     	hasActivity = activ;
     	parent = pa;
@@ -102,18 +104,15 @@ public class Monster {
     public void addVariancy(){
     	vX = Math.random()*30 - 15;
     	vY = Math.random()*30 - 15;
-    	generateID();
-    }
-    private void generateID(){
-    	ID = (int)((String.valueOf((int)(Math.abs(vX) + Math.abs(vY)))+(int)(Math.random()*35) + "12").hashCode() *
-    			Math.random()*35 + 12);
     }
     public void addVariancy(double vx, double vy, int id){
     	vX = vx;
     	vY = vy;
     	ID = id;
     }
-    public void remove(boolean isKilled){
+    public void remove(boolean isKilled, int who){
+    	if(isDied)
+    		return;
     	
     	if(isGUI){
     		parentView.getChildren().remove(view);
@@ -121,7 +120,10 @@ public class Monster {
     		view.setVisible(false);
     		HPview.setVisible(false);
     	}
-    	parent.removeMonster(this, isKilled);
+    	if(hasActivity){
+    		parent.s_removeMonster(this, isKilled, who);
+    		isDied = true;
+    	}
     }
     public Rectangle getHPView(){
     	return HPview;
@@ -185,13 +187,13 @@ public class Monster {
     	b.setTarget(this);
     	buffList.add(b);
     }
-    public void takeDamage(double damage){
-    	if (!hasActivity)
-    		return;
+    public void takeDamage(double damage, int who){
+    	
         curHP = curHP - damage;
         if (curHP <= 0){
             
-            remove(true);
+        	if(hasActivity)
+        		remove(true, who);
             
         }else if(isGUI){
         	double kHP = curHP / maxHP;
@@ -200,14 +202,12 @@ public class Monster {
         }
     }
     public void addBuff(Buff b){
-    	if(hasActivity){
-    		Buff buff = Buff.copy(b);
-    		buff.setTarget(this);
-    		buffList.add(buff);
-    	}
+		Buff buff = Buff.copy(b);
+		buff.setTarget(this);
+		buffList.add(buff);
     }
     public boolean hasDirection(){
-    	int dir = parent.getDirection(getTileX(), getTileY());
+    	int dir = parent.s_getConfigurations().getDirection(getTileX(), getTileY());
     	return (dir >= -8 && dir < 0) || (dir == 5);
     }
     public boolean hasDirectionIn(int[][] map){
@@ -215,11 +215,11 @@ public class Monster {
     	return dir < 0 || dir == 5;
     }
     public void getNextCoord(){
-    	int dir = parent.getDirection(getTileX(), getTileY());
+    	int dir = parent.s_getConfigurations().getDirection(getTileX(), getTileY());
     	if (dir < 0){
-    		nextPoint = parent.getNextCoord(getTileX(), getTileY());
+    		nextPoint = parent.s_getConfigurations().getNextCoord(getTileX(), getTileY());
     	}else if(dir == 5){
-    		remove(false);
+    		remove(false, 0);
     	}else{
     		System.out.println("NODIRECTION");
     	}
@@ -278,6 +278,9 @@ public class Monster {
 	}
 	public int getID(){
 		return ID;
+	}
+	public void setId(int dieCount) {
+		ID = dieCount;
 	}
 
 }

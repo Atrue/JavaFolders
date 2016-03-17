@@ -28,7 +28,8 @@ public class MainMenuController {
     	//GameManager gameManager = new GameManager();
         //gameManager.initialize(1);
     	//loadGameButton.setDisable(true);
-    	Network.init();
+    	Network net = new Network();
+    	net.init();
     }
     public void exitGame(){
         System.exit(1);

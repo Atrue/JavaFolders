@@ -61,6 +61,11 @@ class ClientHandler implements Runnable{
         	   }
         	   break;
            }
+           case "upgradeTower":{
+        	   JSONArray conf = json.getJSONArray("options");
+        	   server.tryUpTower(id, conf.getInt(0), conf.getInt(1));
+        	   break;
+           }
            case "pause":{
         	   server.trySetState(id, json.getBoolean("state"));
         	   break;
@@ -84,7 +89,7 @@ class ClientHandler implements Runnable{
    public synchronized void doTransition(int value) throws JSONException, IOException{
 	   resourse += value;
 	   JSONObject json = new JSONObject();
-	   json.put("event", "resourse");
+	   json.put("event", "money");
 	   json.put("value", resourse);
 	   send(json.toString());
    }
@@ -101,11 +106,14 @@ class ClientHandler implements Runnable{
 	   JSONObject json = new JSONObject();
 	   json.put("event", "logout");
 	   json.put("name", name);
+	   json.put("id", id);
 	   for(int i=0;i<clients.length;i++){
 		   if (clients[i] != null && i != id){
 			   clients[i].send(json.toString());
 		   }
 	   }
+	   json.put("event", "bye");
+	   send(json.toString());
 	   isConnection = false;
 	   clients[id] = null;
    }
@@ -116,12 +124,14 @@ class ClientHandler implements Runnable{
 	   JSONObject json = new JSONObject();
 	   json.put("event", "newUser");
 	   json.put("name", name);
+	   json.put("id", id);
 	   for(int i=0;i<clients.length;i++){
 		   if (clients[i] != null && i != id){
 			   clients[i].send(json.toString());
 		   }
 	   }
 	   json.put("event", "login");
+	   json.put("message", "You connected to "+socket.getInetAddress()+":"+socket.getPort());
 	   json.put("names", getOnlineUsers());
 	   json.put("special", isAdmin);
 	   send(json.toString());
@@ -144,7 +154,10 @@ class ClientHandler implements Runnable{
 	   JSONArray js = new JSONArray();
 	   for(int i=0;i<clients.length;i++){
 		   if (clients[i] != null){
-			   js.put(clients[i].name);
+			   JSONArray pair = new JSONArray();
+			   pair.put(clients[i].id);
+			   pair.put(clients[i].name);
+			   js.put(pair);
 		   }
 	   }
 	   return js;

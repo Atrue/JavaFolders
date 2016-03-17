@@ -14,13 +14,17 @@ import java.util.ResourceBundle;
 
 import org.json.JSONException;
 
-import game.Main;
+import game.MenuNavigator;
 import game.engine.characters.ListOfCharacters;
 import game.engine.characters.Tower;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
 import javafx.scene.Group;
+import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
@@ -36,7 +40,11 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.scene.text.Text;
+import javafx.stage.Popup;
+import javafx.util.Duration;
 
 public class GameController {
 
@@ -109,19 +117,13 @@ public class GameController {
     
     private GameManager gameManager; 
     
-    private final int TILE_GRASS = 0;
-    private final int TILE_HORISONTAL = 1;
-    private final int TILE_VERTICAL = 2;
-    private final int TILE_BOT_RIGHT = 3;
-    private final int TILE_BOT_LEFT = 4;
-    private final int TILE_RIGHT_TOP = 5;
-    private final int TILE_LEFT_TOP = 6;
 	private int RESOLUTION_WIDTH = 640+32*2;
 	private int RESOLUTION_HEIGHT = 480+32*2;
 	
 	private ImageView backgroundMap;
     private boolean hoverState = false;
     private Tower hoverTower;
+	private Popup popup;
     
 
     
@@ -145,15 +147,14 @@ public class GameController {
         assert levelLabel != null : "fx:id=\"levelLabel\" was not injected: check your FXML file 'gameui.fxml'.";
         assert currentLives != null : "fx:id=\"currentLives\" was not injected: check your FXML file 'gameui.fxml'.";
         assert timeLabel != null : "fx:id=\"timeLabel\" was not injected: check your FXML file 'gameui.fxml'.";
-        
-    }
+     }
     public void setGameManager(GameManager gameManager){
         this.gameManager = gameManager;  
         
         backgroundMap = new ImageView();
-        repaintBG(GameState.getMap());
+        repaintBG(gameManager.s_getConfigurations().getMap());
         hoverTower = generateHoverLabel();
-        
+        createPopUp();
         
         Group g = new Group();
         g.getChildren().add(backgroundMap);
@@ -166,6 +167,7 @@ public class GameController {
         hoverTower.setVisible(false);
         hoverTower.setPrefWidth(32);  
         hoverTower.setPrefHeight(32); 
+        hoverTower.setGUIlable(true);
         return hoverTower;
     }
     private void replaceHoverLabel(int type){
@@ -203,7 +205,7 @@ public class GameController {
                 
             	//populate each rectangle with tile from PixelReader
                 switch(map[x][y]){
-                    case TILE_GRASS: //paint grass(OPEN NODE)
+                    case 0: //paint grass(OPEN NODE)
                         tilereader.getPixels(0 , 0 , 32 , 32 , picFormat , buffer , 0 , 128);
                         break;
                     case 1:
@@ -245,8 +247,8 @@ public class GameController {
 			@Override
 			public void handle(MouseEvent event) {
 				// TODO Auto-generated method stub
-				gameManager.upgradeTower(GameState.getTarget());
-				gameManager.updateLabels();
+				gameManager.tryUpgradeTower(gameManager.getTarget());
+				gameManager.s_updateLabels();
 			}
 		};
 		targetUpgradeButton.setOnMouseClicked(upgrade);
@@ -255,7 +257,7 @@ public class GameController {
 			@Override
 			public void handle(MouseEvent event) {
 				// TODO Auto-generated method stub
-				gameManager.sellTower(GameState.getTarget());
+				gameManager.trySellTower(gameManager.getTarget());
 				
 			}
 		};
@@ -266,6 +268,30 @@ public class GameController {
     	buyTower1.setTooltip(tip);
     	
     }
+    private void createPopUp(){
+    	popup = new Popup();
+    	popup.setX(MenuNavigator.stage.getX()+ MenuNavigator.stage.getWidth()); 
+	    popup.setY(MenuNavigator.stage.getY()+ MenuNavigator.stage.getHeight());
+	    Label blocked = new Label("Blocked!");
+	    blocked.setPrefHeight(32);
+	    blocked.setPrefWidth(100);
+	    blocked.getStyleClass().add("blocked");
+	    blocked.setAlignment(Pos.CENTER);
+	    popup.getContent().add(blocked);
+	    popup.setAutoHide(true);
+    }
+    public void showBlockedPop(double x, double y){
+	    Parent parent = ongrouppane.getParent();
+        // Popup will be shown at upper left corner of calenderbutton
+        final double layoutX = parent.getScene().getWindow().getX() + parent.getScene().getX() - 50;
+        final double layoutY = parent.getScene().getWindow().getY() + parent.getScene().getY() - 16;
+        popup.show(parent, layoutX + x, layoutY + y);
+		new Timeline(new KeyFrame(
+    			Duration.millis(1234),
+    			tick -> popup.hide()
+    			)).play();
+    }
+    
     public Pane getGeneralLayout(){
     	return this.ongrouppane;
     }
@@ -332,7 +358,7 @@ public class GameController {
         if (upcost > 0){
         	this.targetUpgradeButton.setVisible(true);
         	this.targetUpgradePrice.setText(String.valueOf(upcost));
-        	this.targetUpgradeButton.setDisable(GameState.getResources() < upcost);
+        	this.targetUpgradeButton.setDisable(gameManager.s_getConfigurations().getResources() < upcost);
         }else{
         	this.targetUpgradeButton.setVisible(false);
         }
@@ -344,7 +370,7 @@ public class GameController {
         public void handle(MouseEvent me) {
         	if (hoverState){
         		if (me.getButton() == MouseButton.PRIMARY){
-        			gameManager.buyTower(hoverTower.getType(), me.getX(),me.getY());
+        			gameManager.tryBuyTower(hoverTower.getType(), me.getX(),me.getY());
         		}else{
         			hoverTower.setVisible(false);
             		hoverState = false;
@@ -354,11 +380,11 @@ public class GameController {
             }else{
             	Tower tower = gameManager.getTower(me.getX(), me.getY());
             	if (tower != null){
-            		GameState.setTarget(tower);
+            		gameManager.setTarget(tower);
             		targetTowerInfo.setVisible(true);
-            		gameManager.updateLabels();
+            		gameManager.s_updateLabels();
             	}else{
-            		GameState.setTarget(null);
+            		gameManager.setTarget(null);
             		targetTowerInfo.setVisible(false);
             	}
             }
@@ -370,7 +396,7 @@ public class GameController {
         	if (hoverState){
         		int xTile = (int)(me.getX() / 32);
         		int yTile = (int)(me.getY() / 32);
-        		if(GameState.nodeOpen(xTile,yTile)){
+        		if(gameManager.s_getConfigurations().nodeOpen(xTile,yTile)){
         			hoverTower.setId("tower_hover");
         		}else{
         			hoverTower.setId("tower_hover_lock");
@@ -384,7 +410,7 @@ public class GameController {
     }
 	public void updateBuyers() {
 		// TODO Auto-generated method stub
-		int m = GameState.getResources();
+		int m = gameManager.s_getConfigurations().getResources();
 		buyTower1.setDisable(ListOfCharacters.getTower(0, 0).getPrice() > m);
 		buyTower2.setDisable(ListOfCharacters.getTower(1, 0).getPrice() > m);
 		buyTower3.setDisable(ListOfCharacters.getTower(2, 0).getPrice() > m);

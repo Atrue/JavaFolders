@@ -1,8 +1,9 @@
 package game.engine.characters;
 
-import game.engine.State;
+import game.engine.ServerLink;
 
 public class Buff{
+	private int ownerID;
 	private double damage;
 	private double slow;
 	private double duration;
@@ -49,7 +50,12 @@ public class Buff{
 		this.damage = damage*dmgK;
 		this.sDesc = labelString();
 	}
-	
+	public void setOwnerID(int id){
+		this.ownerID = id;
+	}
+	public int getOwnerId(){
+		return ownerID;
+	}
 	public void setTarget(Monster monster){
 		target = monster;
 	}
@@ -80,7 +86,7 @@ public class Buff{
 	}
 	
     public double getTick(){
-		return 1./State.getFPS();
+		return 1./ServerLink.getFPS();
 	}
     public String getId(){
     	return sIcon;
@@ -95,7 +101,7 @@ public class Buff{
 	public boolean update(){
 		if(lostion > 0){
 			
-			target.takeDamage(damage * getTick());
+			target.takeDamage(damage * getTick(), ownerID);
 			target.slow(slow);
 			
 			lostion -= getTick();

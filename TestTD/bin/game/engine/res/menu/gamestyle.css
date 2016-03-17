@@ -16,6 +16,18 @@
     -fx-background-repeat: no-repeat;
     -fx-background-position: center;
 }
+.towerBG_0{
+	-fx-background-color: rgba(0,0,255,0.3);
+}
+.towerBG_1{
+	-fx-background-color: rgba(0,255,0,0.3);
+}
+.towerBG_2{
+	-fx-background-color: rgba(255,0,0,0.3);
+}
+.towerBG_3{
+	-fx-background-color: rgba(255,255,0,0.3);
+}
 
 #tower_state, #tower_hover, #tower_hover_lock{
 	-fx-text-alignment:center;
@@ -138,4 +150,12 @@
 .label_Y_text{
 	-fx-font-weight:bold;
 	-fx-font: 25px "Serif";
+}
+.blocked{
+	-fx-background-color: rgba(255,0,0,0.5);
+	-fx-border-color: rgba(255,0,0,0.7);
+	-fx-text-fill: white;
+	-fx-border-width: 3px;
+	-fx-border-radius: 5px;
+	-fx-font-weight:bold;
 }

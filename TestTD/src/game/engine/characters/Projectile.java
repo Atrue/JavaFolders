@@ -85,7 +85,7 @@ public class Projectile extends Label {
 	    	
 	    	return true;
     	}else{
-    		target.takeDamage(damage);
+    		target.takeDamage(damage, parent.getOwnerID());
     		return false;
     	}
     }

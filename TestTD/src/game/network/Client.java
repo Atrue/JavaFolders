@@ -3,8 +3,6 @@ package game.network;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -14,22 +12,19 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public class Client implements Runnable{
-	private NetworkLink link;
+	private ClientLink link;
 	private String name;
 	private DataOutputStream out;
 	private DataInputStream in;
 	private Socket socket;
 	private boolean isConnection;
-	public Client(String address, int port, String n, NetworkLink l){
-		link = l;
+	public Client(String address, int port, String n){
 		name = n;
 		try {
 			InetAddress ipAddress = InetAddress.getByName(address);
 	        socket = new Socket(ipAddress, port);
-	        InputStream sin = socket.getInputStream();
-	        OutputStream sout = socket.getOutputStream();
-	        in = new DataInputStream(sin);
-	        out = new DataOutputStream(sout);
+	        in = new DataInputStream(socket.getInputStream());
+	        out = new DataOutputStream(socket.getOutputStream());
 		}catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -44,6 +39,11 @@ public class Client implements Runnable{
 	}
 	public void stop(){
 		isConnection = false;
+		try {
+			logOut();
+		} catch (JSONException | IOException e) {
+			
+		}
 	}
 	@Override
     public void run() {
@@ -60,74 +60,96 @@ public class Client implements Runnable{
                 }
                 switch(json.getString("event")){
                 case "message":{
-                	link.send(json.getString("message"));
+                	link.c_send(json.getString("message"));
                 	break;
                 }
                 case "tick":{
                 	JSONObject conf = json.getJSONObject("config");
                 	if(conf.has("addMonsters")){
-                		link.monster(conf.getJSONArray("addMonsters"), true);
+                		link.c_monster(conf.getJSONArray("addMonsters"), true);
                 	}
                 	if(conf.has("levelUp")){
-                		link.special("level", conf.getInt("levelUp"));
+                		link.c_special("level", conf.getInt("levelUp"));
                 	}
                 	if(conf.has("dieMonsters")){
-                		link.monster(conf.getJSONArray("dieMonsters"), false);
+                		link.c_monster(conf.getJSONArray("dieMonsters"), false);
                 	}
-                	link.tick();
+                	if(conf.has("lives")){
+                		link.c_special("lives", conf.getInt("lives"));
+                	}
+                	if(conf.has("addBuff")){
+                		JSONArray jbuffs = conf.getJSONArray("addBuff");
+                		for(int i=0;i<jbuffs.length();i++){
+                			JSONArray jar = jbuffs.getJSONArray(i);
+                			link.c_buff(jar.getInt(0), jar.getInt(1), jar.getInt(2));
+                		}
+                		
+                	}
+                	link.c_tick();
                 	break;
                 }
                 case "newUser":{
                 	String name = json.getString("name");
-                	link.send("Connected new user "+name+"!");
-                	link.users(name, true);
+                	link.c_send("Connected new user "+name+"!");
+                	link.c_users(json.getInt("id"), name, true);
                 	break;
                 }
                 case "login":{
-                	link.send("You connected to "+socket.getInetAddress()+":"+socket.getPort());
+                	link.c_send(json.getString("message"));
                 	for(int i=0;i<json.getJSONArray("names").length();i++){
-                		link.users(json.getJSONArray("names").getString(i), true);
+                		JSONArray pair = json.getJSONArray("names").getJSONArray(i);
+                		link.c_users(pair.getInt(0), pair.getString(1), true);
                 	}
                 	if (json.getBoolean("special")){
-                		link.special("server", true);
+                		link.c_special("server", true);
                 	}
                 	break;
                 }
                 case "start":{
-                	link.start(json.getJSONObject("config"));
+                	link.c_start(json.getJSONObject("config"));
                 	break;
                 }
                 case "pause":{
-                	link.pause(json.getBoolean("state"), json.getString("message"));
+                	link.c_pause(json.getBoolean("state"), json.getString("message"));
                 	break;
                 }
                 case "tower":{
+                	JSONArray conf = json.getJSONArray("options");
              	   if(json.getBoolean("state")){
-             		  JSONArray conf = json.getJSONArray("options");
-             		  link.tower(conf.getInt(0), conf.getInt(1), conf.getInt(2), true);
+             		  
+             		  link.c_tower(conf.getInt(0), conf.getInt(1), conf.getInt(2), conf.getInt(3), true);
+             	   }else{
+             		  link.c_tower(conf.getInt(0), conf.getInt(1), 0, 0, false);
              	   }
              	   break;
                 }
                 case "money":{
-                	link.money(json.getInt("money"));
+                	link.c_money(json.getInt("value"));
+                	break;
+                }
+                case "upgradeTower":{
+                	JSONArray conf = json.getJSONArray("options");
+                	link.c_upgrade(conf.getInt(0), conf.getInt(1));
                 	break;
                 }
                 case "logout":{
-                	link.send(json.getString("message"));
-                	link.users(json.getString("name"), false);
+                	link.c_send("User "+json.getString("name")+" have disconnected!");
+                	link.c_users(json.getInt("id"), json.getString("name"), false);
                 	break;
                 }
                 case "endGame":{
-                	link.endGame(json.getBoolean("state"));
+                	link.c_endGame(json.getBoolean("state"));
+                	break;
+                }
+                case "bye":{
+                	socket.close();
                 	break;
                 }
                 }
                 System.out.println("Debug:"+json.toString());
             }
-            logOut();
-            socket.close();
         } catch (IOException x) {
-            x.printStackTrace();
+            System.err.println("Server is shutting down");
         } catch (JSONException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -157,7 +179,7 @@ public class Client implements Runnable{
     	json.put("message", message);
     	send(json);
     }
-    public void setLink(NetworkLink l){
+    public void setLink(ClientLink l){
     	link = l;
     }
 	public void buyTower(int xTile, int yTile, int type) throws JSONException, IOException {
@@ -168,6 +190,30 @@ public class Client implements Runnable{
     	options.put(xTile);
     	options.put(yTile);
     	options.put(type);
+    	json.put("options", options);
+    	send(json);
+	}
+	public void getUsers() throws JSONException, IOException {
+		JSONObject json = new JSONObject();
+    	json.put("event", "getUsers");
+    	send(json);
+	}
+	public void sellTower(int tileX, int tileY) throws JSONException, IOException {
+		JSONObject json = new JSONObject();
+    	json.put("event", "tower");
+    	json.put("state", false);
+    	JSONArray options = new JSONArray();
+    	options.put(tileX);
+    	options.put(tileY);
+    	json.put("options", options);
+    	send(json);
+	}
+	public void upgradeTower(int tileX, int tileY) throws JSONException, IOException {
+		JSONObject json = new JSONObject();
+    	json.put("event", "upgradeTower");
+    	JSONArray options = new JSONArray();
+    	options.put(tileX);
+    	options.put(tileY);
     	json.put("options", options);
     	send(json);
 	}
