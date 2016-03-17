@@ -131,9 +131,13 @@ class ClientHandler implements Runnable{
 		   }
 	   }
 	   json.put("event", "login");
+<<<<<<< HEAD
 	   json.put("message", "You connected to "+socket.getInetAddress()+":"+socket.getPort());
 	   json.put("names", getOnlineUsers());
+=======
+>>>>>>> b793fd38b593565fcc041fd37b2ceee953df3299
 	   json.put("special", isAdmin);
+	   json.put("names", getOnlineUsers());
 	   send(json.toString());
    }
    public synchronized void send(String message) throws IOException{

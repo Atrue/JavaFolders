@@ -6,7 +6,7 @@ import org.json.JSONObject;
 public interface NetworkLink{
 	public void special(String key, Object value);
 	public void send(String string);
-	public void users(String string, boolean b);
+	public void users(int id, String string, boolean b);
 	public void start(JSONObject object);
 	public void tower(int x,int y, int type, boolean what);
 	public void pause(boolean state, String name);

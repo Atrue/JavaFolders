@@ -37,13 +37,17 @@ public class Client implements Runnable{
 		isConnection = true;
 		new Thread(this).start();
 	}
-	public void stop(){
+	public void stop() throws JSONException, IOException{
 		isConnection = false;
+<<<<<<< HEAD
 		try {
 			logOut();
 		} catch (JSONException | IOException e) {
 			
 		}
+=======
+		logOut();
+>>>>>>> b793fd38b593565fcc041fd37b2ceee953df3299
 	}
 	@Override
     public void run() {
@@ -90,15 +94,24 @@ public class Client implements Runnable{
                 }
                 case "newUser":{
                 	String name = json.getString("name");
+<<<<<<< HEAD
                 	link.c_send("Connected new user "+name+"!");
                 	link.c_users(json.getInt("id"), name, true);
+=======
+                	link.send("Connected new user "+name+"!");
+                	link.users(json.getInt("id"), name, true);
+>>>>>>> b793fd38b593565fcc041fd37b2ceee953df3299
                 	break;
                 }
                 case "login":{
                 	link.c_send(json.getString("message"));
                 	for(int i=0;i<json.getJSONArray("names").length();i++){
                 		JSONArray pair = json.getJSONArray("names").getJSONArray(i);
+<<<<<<< HEAD
                 		link.c_users(pair.getInt(0), pair.getString(1), true);
+=======
+                		link.users(pair.getInt(0), pair.getString(1), true);
+>>>>>>> b793fd38b593565fcc041fd37b2ceee953df3299
                 	}
                 	if (json.getBoolean("special")){
                 		link.c_special("server", true);
@@ -133,8 +146,13 @@ public class Client implements Runnable{
                 	break;
                 }
                 case "logout":{
+<<<<<<< HEAD
                 	link.c_send("User "+json.getString("name")+" have disconnected!");
                 	link.c_users(json.getInt("id"), json.getString("name"), false);
+=======
+                	link.send(json.getString("name") + " is disconnected.");
+                	link.users(json.getInt("id"), json.getString("name"), false);
+>>>>>>> b793fd38b593565fcc041fd37b2ceee953df3299
                 	break;
                 }
                 case "endGame":{
@@ -148,6 +166,11 @@ public class Client implements Runnable{
                 }
                 System.out.println("Debug:"+json.toString());
             }
+<<<<<<< HEAD
+=======
+            
+            socket.close();
+>>>>>>> b793fd38b593565fcc041fd37b2ceee953df3299
         } catch (IOException x) {
             System.err.println("Server is shutting down");
         } catch (JSONException e) {
