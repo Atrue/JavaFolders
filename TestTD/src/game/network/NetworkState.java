@@ -34,7 +34,7 @@ public class NetworkState implements Serializable, ServerLink {
 		clients = cl;
 		config = new Configurations();
 		config.init(this, 1, cl.length);
-		startResourse = 1000;
+		startResourse = 10;
 		dieCount = 0;
 		
 		ListOfCharacters.init();

@@ -6,7 +6,6 @@
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
-<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.Pane?>
@@ -28,10 +27,10 @@
             <Pane fx:id="ongrouppane" style="-fx-background-color: green;" />
             <GridPane id="bg_right_panel" alignment="BASELINE_RIGHT" maxHeight="800.0" maxWidth="320.0" minHeight="544.0" minWidth="320.0" vgap="10.0" GridPane.columnIndex="1">
                       <padding>
-                  <Insets bottom="50.0" left="50.0" right="50.0" top="40.0" />
+                  <Insets bottom="50.0" left="40.0" right="40.0" top="40.0" />
                </padding>
                <children>
-                  <Label styleClass="label_def_text" text="Next:" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                  <Label styleClass="label_def_text" text="t" GridPane.columnIndex="2" GridPane.rowIndex="1" />
                   <Label alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" onMouseClicked="#openMenu" prefHeight="45.0" prefWidth="90.0" styleClass="button_tet" GridPane.columnIndex="2" GridPane.columnSpan="2">
                      <graphic>
                         <Label prefHeight="40.0" prefWidth="40.0" styleClass="label_icon_menu" />
@@ -41,9 +40,9 @@
                         <Label fx:id="openMenuButton" alignment="TOP_LEFT" minHeight="-Infinity" minWidth="-Infinity" prefHeight="40.0" prefWidth="40.0" styleClass="label_icon_play" />
                      </graphic></Label>
                
-                   <Label fx:id="resourceLabel" styleClass="label_def_text" text="Gold: " GridPane.columnIndex="2" GridPane.rowIndex="2" />
-                   <Label fx:id="levelLabel" styleClass="label_def_text" text="Wave: " GridPane.rowIndex="1" />
-                   <Label fx:id="livesLabel" styleClass="label_def_text" text="Lives: " GridPane.rowIndex="2" />
+                   <Label fx:id="resourceLabel" styleClass="label_def_text" text="\$" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+                   <Label fx:id="levelLabel" styleClass="label_def_text" text="N" GridPane.rowIndex="1" />
+                   <Label fx:id="livesLabel" styleClass="label_def_text" text="&lt;3" GridPane.rowIndex="2" />
                    <Label fx:id="currentResources" styleClass="label_bold_text" text="0" GridPane.columnIndex="3" GridPane.rowIndex="2" />
                    <Label fx:id="currentLevel" styleClass="label_bold_text" text="0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                    <Label fx:id="currentLives" styleClass="label_bold_text" text="0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
@@ -125,51 +124,20 @@
                         <Insets top="10.0" />
                      </GridPane.margin>
                   </GridPane>
-                  <GridPane alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" visible="false" GridPane.columnSpan="4" GridPane.rowIndex="6">
-                    <columnConstraints>
-                      <ColumnConstraints halignment="CENTER" hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                      <ColumnConstraints halignment="CENTER" hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                        <ColumnConstraints halignment="CENTER" hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                    </columnConstraints>
-                    <rowConstraints>
-                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                      <RowConstraints minHeight="10.0" prefHeight="30.0" valignment="CENTER" vgrow="SOMETIMES" />
-                    </rowConstraints>
-                     <children>
-                        <Label maxHeight="50.0" prefHeight="50.0" text="Red">
-                           <graphic>
-                              <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true" styleClass="image_palitre_red" />
-                           </graphic>
-                        </Label>
-                        <Label text="Green" GridPane.columnIndex="1">
-                           <graphic>
-                              <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true" styleClass="image_palitre_green" />
-                           </graphic>
-                        </Label>
-                        <Label text="Blue" GridPane.columnIndex="2">
-                           <graphic>
-                              <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true" styleClass="image_palitre_blue" />
-                           </graphic>
-                        </Label>
-                        <Button contentDisplay="CENTER" mnemonicParsing="false" styleClass="button_tet" text="uRed" GridPane.rowIndex="1" />
-                        <Button mnemonicParsing="false" styleClass="button_tet" text="uGreen" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                        <Button mnemonicParsing="false" styleClass="button_tet" text="uBlue" GridPane.columnIndex="2" GridPane.rowIndex="1" />
-                     </children>
-                  </GridPane>
                   <Label alignment="CENTER" contentDisplay="CENTER" maxWidth="1.7976931348623157E308" styleClass="label_def_text" text="Your palitre:" textAlignment="CENTER" visible="false" GridPane.columnSpan="4" GridPane.rowIndex="8" />
-                  <Label alignment="CENTER" maxWidth="1.7976931348623157E308" styleClass="label_def_text" text="Pick a pen:" textAlignment="CENTER" GridPane.columnSpan="4" GridPane.rowIndex="3" />
-                  <GridPane fx:id="messagesPane" minHeight="100.0" GridPane.columnSpan="4" GridPane.rowIndex="7">
+                  <Label alignment="CENTER" maxWidth="1.7976931348623157E308" styleClass="label_def_text" text="#Y" textAlignment="CENTER" GridPane.columnSpan="4" GridPane.rowIndex="3" />
+                  <GridPane fx:id="messagesPane" minHeight="60.0" GridPane.columnSpan="4" GridPane.rowIndex="7">
                     <columnConstraints>
                       <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
                     </columnConstraints>
                     <rowConstraints>
-                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                      <RowConstraints minHeight="10.0" prefHeight="20.0" vgrow="SOMETIMES" />
                       <RowConstraints maxHeight="-Infinity" minHeight="20.0" prefHeight="20.0" vgrow="SOMETIMES" />
                     </rowConstraints>
                      <children>
-                        <ScrollPane hbarPolicy="NEVER" prefHeight="200.0" prefWidth="200.0">
+                        <ScrollPane hbarPolicy="NEVER" prefHeight="48.0" prefWidth="200.0">
                            <content>
-                              <TextArea fx:id="areaMessages" prefHeight="77.0" prefWidth="199.0" />
+                              <TextArea fx:id="areaMessages" editable="false" prefHeight="56.0" prefWidth="199.0" />
                            </content>
                         </ScrollPane>
                         <TextField fx:id="inputMessage" minHeight="20.0" onAction="#sendMessage" prefHeight="20.0" GridPane.rowIndex="1" />

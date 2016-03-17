@@ -308,6 +308,7 @@ public class GameController {
     public void sendMessage(ActionEvent event){
     	try {
 			gameManager.sendMessage(inputMessage.getText());
+			inputMessage.setText("");
 		} catch (JSONException | IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

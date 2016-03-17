@@ -55,9 +55,6 @@ public class Client implements Runnable{
                 //System.out.println(in.readLine());
                 line = in.readUTF(); // ждем пока сервер отошлет строку текста.
                 json = new JSONObject(line);
-                if (json.has("selfmade")){
-                	continue;
-                }
                 switch(json.getString("event")){
                 case "message":{
                 	link.c_send(json.getString("message"));
@@ -146,7 +143,7 @@ public class Client implements Runnable{
                 	break;
                 }
                 }
-                System.out.println("Debug:"+json.toString());
+                //System.out.println("Debug:"+json.toString());
             }
         } catch (IOException x) {
             System.err.println("Server is shutting down");
