@@ -43,7 +43,6 @@ public class Network implements ClientLink{
         MenuNavigator.addScene(gameScene, 2);
         MenuNavigator.setScene(2);
 	}
-<<<<<<< HEAD
 	public void createServer(String port, int count){
 		try {
 			server = new Server(Integer.parseInt(port), count);
@@ -57,16 +56,6 @@ public class Network implements ClientLink{
 			controller.connectionPack(false);
 		}
 		
-=======
-	public static void createServer(String port, int number){
-		try{
-			server = new Server(Integer.parseInt(port), number);
-			server.start();
-			controller.connectClient(null);
-		} catch (NumberFormatException e){
-			System.err.println("fck, idiot.");
-		}
->>>>>>> b793fd38b593565fcc041fd37b2ceee953df3299
 	}
 	
 	public void connectClient(String addr, String port, String name) {
@@ -81,32 +70,14 @@ public class Network implements ClientLink{
 		}
 		
 	}
-	
-	public static boolean isServer(){
-		return server != null;
-	}
 	public static void closeConnections(){
-<<<<<<< HEAD
 		if (client != null){
 			client.stop();
 			if (server != null){
 				try {
 					server.stop();
 				} catch (IOException e) {}
-=======
-		try {
-			if (client != null){
-				client.stop();
-				controller.connectionPack(false);
-				if (server != null){
-					server.stop();
-				}
->>>>>>> b793fd38b593565fcc041fd37b2ceee953df3299
 			}
-		
-		} catch (IOException | JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 	}
 	public boolean isServer(){
@@ -128,7 +99,6 @@ public class Network implements ClientLink{
 	public void startGame(){
 		server.startGame();
 	}
-<<<<<<< HEAD
 	public void toMenu(){
 		try {
 			if (server != null)
@@ -137,10 +107,6 @@ public class Network implements ClientLink{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-=======
-	public static void toMenu(){
-		closeConnections();
->>>>>>> b793fd38b593565fcc041fd37b2ceee953df3299
 		MenuNavigator.setScene(0);
 	}
 	
@@ -187,64 +153,8 @@ public class Network implements ClientLink{
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-<<<<<<< HEAD
 		    }
 		});
-=======
-			}
-			@Override
-			public void send(String string) {
-				SwingUtilities.invokeLater(new Runnable() {
-				    public void run() {
-				    	controller.putMessage(string);
-				    }
-				});
-			}
-			@Override
-			public void users(int id, String string, boolean b) {
-				Platform.runLater(new Runnable() {
-				    public void run() {
-				    	if (b){
-				    		controller.addUser(id, string);
-				    	}else{
-				    		controller.removeUser(id);
-				    	}
-				    }
-				});
-			}
-			@Override
-			public void start(JSONObject object) {
-				Platform.runLater(new Runnable() {
-				    public void run() {
-				    	try {
-							GameManager game = new GameManager();
-							game.setClient(client);
-							game.initialize(1);							
-							game.setConfig(object);
-						} catch (IOException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-				    }
-				});
-			}
-			@Override
-			public void tower(int x, int y, int type, boolean what) {}
-			@Override
-			public void pause(boolean state, String name) {}
-			@Override
-			public void money(int money) {}
-			@Override
-			public void monster(JSONArray jsonArray, boolean b) {}
-			@Override
-			public void endGame(boolean boolean1) {}
-			@Override
-			public void tick() {
-				// TODO Auto-generated method stub
-				
-			}
-		};
->>>>>>> b793fd38b593565fcc041fd37b2ceee953df3299
 	}
 	@Override
 	public void c_tower(int x, int y, int type, int who, boolean what) {}

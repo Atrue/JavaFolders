@@ -18,7 +18,6 @@ public class Server implements Runnable{
    private ServerSocket mainsocket;
    private ClientHandler[] clients;
    private NetworkState gameServer;
-<<<<<<< HEAD
    private boolean isStarted = false;
    
    public Server(int port, int count) throws IOException    {
@@ -27,17 +26,6 @@ public class Server implements Runnable{
 	 gameServer = new NetworkState(clients);
      new Thread(this).start();
       
-=======
-   public Server(int port, int number)    {
-       try {
-    	 mainsocket = new ServerSocket(port);
-    	 clients = new ClientHandler[number];
-    	 gameServer = new NetworkState(clients);
-      } catch(Exception x) { x.printStackTrace(); }
->>>>>>> b793fd38b593565fcc041fd37b2ceee953df3299
-   }
-   public void start(){
-	   new Thread(this).start();
    }
    @Override
    public void run() {
