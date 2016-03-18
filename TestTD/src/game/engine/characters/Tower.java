@@ -26,7 +26,6 @@ public class Tower extends TextFlow{
     
 	private Text tName;
 	private Text tLevel;
-	private Text tBuff;
 	private boolean isGUI; // false = server
 	private boolean hasActivity; // false = connected client
 	private int levelTower;

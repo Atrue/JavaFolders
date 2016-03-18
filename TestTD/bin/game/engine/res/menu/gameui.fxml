@@ -60,11 +60,11 @@
                         <RowConstraints minHeight="-Infinity" valignment="TOP" />
                     </rowConstraints>
                      <children>
-                        <Label styleClass="label_def_text" text="F(x)" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER" />
+                        <Label fx:id="targetCH1" styleClass="label_def_text" text="F(x)" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER" />
                         <Label fx:id="targetAttack" styleClass="label_bold_text" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="1" />
-                        <Label styleClass="label_def_text" text="R" GridPane.halignment="CENTER" GridPane.rowIndex="2" />
+                        <Label fx:id="targetCH2" styleClass="label_def_text" text="R" GridPane.halignment="CENTER" GridPane.rowIndex="2" />
                         <Label fx:id="targetRange" styleClass="label_bold_text" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="2" />
-                        <Label styleClass="label_def_text" text="μ" GridPane.halignment="CENTER" GridPane.rowIndex="3" />
+                        <Label fx:id="targetCH3" styleClass="label_def_text" text="μ" GridPane.halignment="CENTER" GridPane.rowIndex="3" />
                         <Label fx:id="targetSpeed" styleClass="label_bold_text" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="3" />
                         <Label fx:id="targetName" styleClass="label_Y_text" textAlignment="CENTER" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
                         <TextFlow prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="1">

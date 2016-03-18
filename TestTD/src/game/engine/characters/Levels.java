@@ -8,18 +8,22 @@ import game.engine.ServerLink;
 public class Levels {
 	private ServerLink parent;
 	
-	private int levels = 50;
+	private int levels = 100;
 	private Iterator<Wave> iterWave;
 	private Wave current;
-	private double timeWaveOut = 0.4;
+	private double timeWaveOut = 0.5;
 	public Levels(ServerLink gm){
 		parent = gm;
 		ArrayList<Wave> waves = new ArrayList<>();
 		for(int i=0;i<levels;i++){
 			int typew = i > 0 && i%5==0? 1: 0;
 			typew = (i-2)%5==0 && i >5 ?2:typew;
+			Wave wave = new Wave(typew, (Math.pow(10,i*10./100)) );
+			if ( (i+1) % 10 == 0)
+				wave.toBOSS();
+			waves.add(wave);
 			System.out.print((i+1)+"- wave:");
-			waves.add(new Wave(typew, (Math.pow(i,1+i/15.)+10)/10.0 ));
+			System.out.println("MaxHP:"+wave.copy.getMaxHP()+" type:"+wave.copy.getType()+" reward:"+wave.copy.getReward());
 		}
 		iterWave = waves.iterator();
 	}
@@ -56,7 +60,10 @@ public class Levels {
 		Wave(int type, double koef){
 			copy = Monster.copy(ListOfCharacters.getMonster(type));
 			copy.powWith(koef);
-			System.out.println("MaxHP:"+copy.getMaxHP()+" type:"+copy.getType()+" reward:"+copy.getReward());
+		}
+		private void toBOSS(){
+			this.count = 1;
+			copy.toBOSS();
 		}
 		
 		public Monster get_copy(){

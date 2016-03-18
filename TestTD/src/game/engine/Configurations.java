@@ -46,7 +46,6 @@ public class Configurations implements Serializable {
 
 	private int[][] map;
 
-	private ServerLink manager;
 	private int state;
 	private int resources; // used for buying and upgrading tower
 	private int level; // represents the current wave of monsters that
@@ -61,8 +60,7 @@ public class Configurations implements Serializable {
 	private int[][] pathMap;
 
 	// CONSTRUCTORS
-	public void init(ServerLink gm, int type, int count) {
-		manager = gm;
+	public void init(int type, int count) {
 		state = IS_PAUSED;
 		resources = 10;
 		level = 0;

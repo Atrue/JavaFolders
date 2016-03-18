@@ -20,7 +20,6 @@ import game.engine.characters.Tower;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
@@ -40,8 +39,6 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
 import javafx.scene.text.Text;
 import javafx.stage.Popup;
 import javafx.util.Duration;
@@ -232,8 +229,8 @@ public class GameController {
     	messagesPane.setVisible(b);
     }
     public void setListeners(){
-        gameManager.getGameScene().setOnMouseClicked(new buyTower());
-        gameManager.getGameScene().setOnMouseMoved(new MouseMove());
+        gameManager.getGameScene().setOnMouseClicked(MouseEvent -> clickMap(MouseEvent));
+        gameManager.getGameScene().setOnMouseMoved(MouseEvent -> moveMouseMap(MouseEvent));
 		buyTower1.setOnMouseClicked(MousesEvent -> buyTower(0));
 		buyTower2.setOnMouseClicked(MousesEvent -> buyTower(1));
 		buyTower3.setOnMouseClicked(MousesEvent -> buyTower(2));
@@ -242,26 +239,14 @@ public class GameController {
 		buyTower6.setOnMouseClicked(MousesEvent -> buyTower(5));
 		buyTower7.setOnMouseClicked(MousesEvent -> buyTower(6));
 		
-		EventHandler<? super MouseEvent> upgrade = new EventHandler<MouseEvent>() {
-
-			@Override
-			public void handle(MouseEvent event) {
-				// TODO Auto-generated method stub
-				gameManager.tryUpgradeTower(gameManager.getTarget());
-				gameManager.s_updateLabels();
-			}
-		};
-		targetUpgradeButton.setOnMouseClicked(upgrade);
-		EventHandler<? super MouseEvent> sell = new EventHandler<MouseEvent>() {
-
-			@Override
-			public void handle(MouseEvent event) {
-				// TODO Auto-generated method stub
-				gameManager.trySellTower(gameManager.getTarget());
-				
-			}
-		};
-		targetSellButton.setOnMouseClicked(sell);
+		targetUpgradeButton.setOnMouseClicked(MouseEvent -> {
+					gameManager.tryUpgradeTower(gameManager.getTarget());
+					gameManager.s_updateLabels();
+					});
+		targetSellButton.setOnMouseClicked(MouseEvent -> { 
+					gameManager.trySellTower(gameManager.getTarget());
+					gameManager.setTarget(null);
+					});
     }
     public void setTooltips(){
     	Tooltip  tip = new Tooltip("100\nPaint simple tower");
@@ -367,46 +352,42 @@ public class GameController {
 
     
     //buy tower at mouse click tile
-    class buyTower implements EventHandler<MouseEvent> {
-        public void handle(MouseEvent me) {
-        	if (hoverState){
-        		if (me.getButton() == MouseButton.PRIMARY){
-        			gameManager.tryBuyTower(hoverTower.getType(), me.getX(),me.getY());
-        		}else{
-        			hoverTower.setVisible(false);
-            		hoverState = false;
-        		}
-        		//hoverTower.setVisible(false);
-        		//hoverState = false;
-            }else{
-            	Tower tower = gameManager.getTower(me.getX(), me.getY());
-            	if (tower != null){
-            		gameManager.setTarget(tower);
-            		targetTowerInfo.setVisible(true);
-            		gameManager.s_updateLabels();
-            	}else{
-            		gameManager.setTarget(null);
-            		targetTowerInfo.setVisible(false);
-            	}
-            }
+    private void clickMap(MouseEvent me){
+    	if (hoverState){
+    		if (me.getButton() == MouseButton.PRIMARY){
+    			gameManager.tryBuyTower(hoverTower.getType(), me.getX(),me.getY());
+    		}else{
+    			hoverTower.setVisible(false);
+        		hoverState = false;
+    		}
+    		//hoverTower.setVisible(false);
+    		//hoverState = false;
+        }else{
+        	Tower tower = gameManager.getTower(me.getX(), me.getY());
+        	if (tower != null){
+        		gameManager.setTarget(tower);
+        		targetTowerInfo.setVisible(true);
+        		gameManager.s_updateLabels();
+        	}else{
+        		gameManager.setTarget(null);
+        		targetTowerInfo.setVisible(false);
+        	}
         }
     }
     //buy tower at mouse click tile
-    class MouseMove implements EventHandler<MouseEvent> {
-        public void handle(MouseEvent me) {
-        	if (hoverState){
-        		int xTile = (int)(me.getX() / 32);
-        		int yTile = (int)(me.getY() / 32);
-        		if(gameManager.s_getConfigurations().nodeOpen(xTile,yTile)){
-        			hoverTower.setId("tower_hover");
-        		}else{
-        			hoverTower.setId("tower_hover_lock");
-        		}
-        		hoverTower.setLayoutX(xTile*32);
-        		hoverTower.setLayoutY(yTile*32);
-            }else{
-            	return;
-            }
+    private void moveMouseMap(MouseEvent me){
+    	if (hoverState){
+    		int xTile = (int)(me.getX() / 32);
+    		int yTile = (int)(me.getY() / 32);
+    		if(gameManager.s_getConfigurations().nodeOpen(xTile,yTile)){
+    			hoverTower.setId("tower_hover");
+    		}else{
+    			hoverTower.setId("tower_hover_lock");
+    		}
+    		hoverTower.setLayoutX(xTile*32);
+    		hoverTower.setLayoutY(yTile*32);
+        }else{
+        	return;
         }
     }
 	public void updateBuyers() {

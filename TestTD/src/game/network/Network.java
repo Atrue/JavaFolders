@@ -13,10 +13,8 @@ import game.MenuNavigator;
 import game.engine.GameManager;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
-import javafx.scene.paint.Color;
 
 public class Network implements ClientLink{
 	
@@ -29,8 +27,7 @@ public class Network implements ClientLink{
 		
 		URL res = GameManager.class.getResource("res/menu/network.fxml");
 		FXMLLoader loader = new FXMLLoader(res);
-		Node gameUI = (Node)loader.load(res.openStream()); 
-
+		loader.load(res.openStream());
 		
 		controller = loader.<NetworkController>getController();
 		controller.setParent(this);

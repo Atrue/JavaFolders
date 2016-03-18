@@ -1,7 +1,6 @@
 package game.engine;
 
 import java.io.IOException;
-import java.util.Date;
 import java.util.Optional;
 
 import org.json.JSONArray;
@@ -17,43 +16,15 @@ import game.engine.characters.Tower;
 import game.network.Client;
 import game.network.ClientLink;
 import game.network.Network;
-import javafx.animation.KeyFrame;
-import javafx.animation.Timeline;
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
-import javafx.geometry.Point2D;
 import javafx.scene.Node;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.DatePicker;
 import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
-import javafx.stage.Popup;
-import javafx.util.Duration;
-
-import java.util.Date;
-
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
-import javafx.geometry.Point2D;
-import javafx.scene.Parent;
-import javafx.scene.control.Button;
-import javafx.scene.layout.VBox;
-import javafx.stage.Popup;
 /**
  * Responsible for all communications between user interface and underlying
  * frameworks. The initialize method starts the game loop when called through
@@ -80,7 +51,7 @@ public class GameManager implements ServerLink, ClientLink {
 		NET = type == 0 ? false : true;
 		// Initializes the game state
 		config = new Configurations();
-		config.init(this, type, 0);
+		config.init(type, 0);
 
 		// Creates gui hierarchy
 		FXMLLoader loader = new FXMLLoader(MenuNavigator.GAMEUI);
@@ -124,41 +95,6 @@ public class GameManager implements ServerLink, ClientLink {
 	}
 
 	
-	public class SimpleCalendar extends VBox {
-
-		  private Popup popup;
-		  final DatePicker datePicker;
-		 
-		  public SimpleCalendar() {
-		    popup = new Popup();
-		    popup.setAutoHide(true);
-		    popup.setAutoFix(true);
-		    popup.setHideOnEscape(true);
-
-		    datePicker = new DatePicker();
-		    popup.getContent().add(datePicker);
-
-		    final Button calenderButton = new Button();
-		    calenderButton.setId("CalenderButton");
-		    calenderButton.setOnAction(new EventHandler<ActionEvent>() {
-
-		      @Override
-		      public void handle(ActionEvent ae) {
-		        Parent parent = SimpleCalendar.this.getParent();
-		        // Popup will be shown at upper left corner of calenderbutton
-		        Point2D point = calenderButton.localToScene(0, 0);
-		        final double layoutX = parent.getScene().getWindow().getX() + parent.getScene().getX() + point.getX();
-		        final double layoutY = parent.getScene().getWindow().getY() + parent.getScene().getY() + point.getY();
-		        popup.show(SimpleCalendar.this, layoutX, layoutY);
-
-		      }
-		    });
-		   
-		    getChildren().add(calenderButton);
-		  }
-	}
-	
-	
 	
 	public void setConfig(JSONObject json) {
 		try {
@@ -194,6 +130,7 @@ public class GameManager implements ServerLink, ClientLink {
 	public boolean transition(int money) {
 		if (config.getResources() - money >= 0) {
 			config.setResources(config.getResources() - money);
+			s_updateLabels();
 			return true;
 		}
 		return false;
@@ -462,7 +399,8 @@ public class GameManager implements ServerLink, ClientLink {
 	public void s_createMonsters(Monster moncopy) {
 		for (Coordinate c : config.getStartCords()) {
 			Monster monster = Monster.copy(moncopy);
-			monster.addVariancy();
+			if (!monster.isBoss())
+				monster.addVariancy();
 			monster.add(c, this, true, true);
 			config.addMonster(monster);
 		}
@@ -479,7 +417,7 @@ public class GameManager implements ServerLink, ClientLink {
 		if (config.getMonstersAlive().contains(monster)) {
 			// Punish player
 			if (!isKilled) {
-				config.setLives((config.getLives()) - 1);
+				config.setLives((config.getLives()) - monster.getLiveCost());
 				if (config.getLives() == 0){
 					s_endGame(false);
 				}

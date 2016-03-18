@@ -1,18 +1,8 @@
 package game.network;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import javafx.scene.paint.Color;
 public class Server implements Runnable{
 	
    private ServerSocket mainsocket;

@@ -14,7 +14,6 @@ import game.engine.ServerLink;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 
 public class Monster {
@@ -22,6 +21,7 @@ public class Monster {
 	private ServerLink parent;
     private boolean isGUI;
     private boolean hasActivity;
+    private boolean isBOSS = false;
     
     private boolean isDied = false;
     
@@ -29,7 +29,7 @@ public class Monster {
 	
 	private ArrayList<Buff> buffList = new ArrayList<>();
     private Label view;                        // Graphical view of monster
-    private Rectangle HPview;
+    //private Rectangle HPview;
     
     private int type;
     private double maxHP;
@@ -67,6 +67,7 @@ public class Monster {
     }
     public static Monster copy(Monster from){
     	Monster to = new Monster(from.maxHP, from.maxSpeed, from.reward, from.type);
+    	to.isBOSS = from.isBOSS;
     	return to;
     }
     public void add(Coordinate start, ServerLink pa, boolean visible, boolean activ){
@@ -84,22 +85,29 @@ public class Monster {
         String style = "";
         if (type == 1){
         	style = "-fx-font-style:italic;";
-        }else if(type == 2){
+        }else if(type == 2 && !isBOSS){
         	style = "-fx-font-weight:bold;";
         }
+        int kSize = 1;
+        if (isBOSS){
+        	style += "-fx-font-weight:bold;";
+        	kSize = 2;
+        }
+        
         
         view.setStyle(style);
-        view.setFont(new Font(30));
-        view.setPrefHeight(32);
-        view.setPrefWidth(32);        
+        view.setFont(new Font(30 * kSize));
+        view.setTextFill(Color.color(0, 1, 0));
+        view.setPrefHeight(32 * kSize);
+        view.setPrefWidth(32 * kSize);        
         
-        HPview = new Rectangle(20, 5);
-        HPview.setFill(Color.color(0, 1, 0));
+        //HPview = new Rectangle(20 * kSize, 5);
+        //HPview.setFill(Color.color(0, 1, 0));
         
         
     	
     	parentView.getChildren().add(view);
-    	parentView.getChildren().add(HPview);
+    	//parentView.getChildren().add(HPview);
     }
     public void addVariancy(){
     	vX = Math.random()*30 - 15;
@@ -116,18 +124,18 @@ public class Monster {
     	
     	if(isGUI){
     		parentView.getChildren().remove(view);
-    		parentView.getChildren().remove(HPview);
+    		//parentView.getChildren().remove(HPview);
     		view.setVisible(false);
-    		HPview.setVisible(false);
+    		//HPview.setVisible(false);
     	}
     	if(hasActivity){
     		parent.s_removeMonster(this, isKilled, who);
     		isDied = true;
     	}
     }
-    public Rectangle getHPView(){
-    	return HPview;
-    }
+    //public Rectangle getHPView(){
+    //	return HPview;
+    //}
     public double getX(){
         return x + vX;
     }
@@ -137,15 +145,29 @@ public class Monster {
     public void setX(double x){
     	this.x = x;
     	if(isGUI){
-    		view.setLayoutX(x + vX - 10);
-        	HPview.setX(x + vX - 10);
+    		view.setLayoutX(x + vX - view.getPrefWidth()/2);
+        	//HPview.setX(x + vX - view.getPrefWidth()*(5./16) - 5);
     	}
     }
     public void setY(double y){
     	this.y = y;
     	if(isGUI){
-    		view.setLayoutY(y + vY -25);
-    		HPview.setY(y + vY -16);
+    		view.setLayoutY(y + vY - view.getPrefHeight()/2 - 5);
+    		//HPview.setY(y + vY - HPview.getHeight()/2 - 13);
+    	}
+    }
+    public void setdX(double x){
+    	this.x += x;
+    	if(isGUI){
+    		view.setLayoutX(view.getLayoutX() + x);
+        	//HPview.setX(HPview.getX() + x);
+    	}
+    }
+    public void setdY(double y){
+    	this.y += y;
+    	if(isGUI){
+    		view.setLayoutY(view.getLayoutY() + y);
+    		//HPview.setY(HPview.getY() + y);
     	}
     }
     public int getReward(){
@@ -160,6 +182,15 @@ public class Monster {
     	reward = Math.pow(maxHP, 0.6);
     	curHP = maxHP;
     }
+    public void toBOSS(){
+    	isBOSS = true;
+    	maxHP *= 11;
+    	reward *= 15;
+    	curHP = maxHP;
+    }
+    
+    
+    
     public int getTileX(){
     	//return (int)((x-16)/32);
     	return (int)(x/32);
@@ -182,8 +213,9 @@ public class Monster {
     }
     public void hardSet(double hp, Buff b){
     	double kHP = curHP / maxHP;
-    	HPview.setWidth(20 * kHP);
-    	HPview.setFill(Color.color(1 - kHP, kHP, 0));
+    	//HPview.setWidth(20 * kHP);
+    	view.setTextFill(Color.color(1 - kHP, kHP, 0));
+    	//HPview.setFill(Color.color(1 - kHP, kHP, 0));
     	b.setTarget(this);
     	buffList.add(b);
     }
@@ -197,8 +229,9 @@ public class Monster {
             
         }else if(isGUI){
         	double kHP = curHP / maxHP;
-        	HPview.setWidth(20 * kHP);
-        	HPview.setFill(Color.color(1 - kHP, kHP, 0));
+        	//HPview.setWidth(20 * kHP);
+        	//HPview.setFill(Color.color(1 - kHP, kHP, 0));
+        	view.setTextFill(Color.color(1 - kHP, kHP, 0));
         }
     }
     public void addBuff(Buff b){
@@ -237,8 +270,8 @@ public class Monster {
     	
     	double k = Math.pow(curSpeed, 2) / Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
     	if (k < 1){
-    		setX(x + dx*k);
-    		setY(y + dy*k);
+    		setdX(dx*k);
+    		setdY(dy*k);
     	}else{
     		setX(nextPoint.getExactX());
     		setY(nextPoint.getExactY());
@@ -282,5 +315,14 @@ public class Monster {
 	public void setId(int dieCount) {
 		ID = dieCount;
 	}
-
+	public boolean isBoss() {
+		// TODO Auto-generated method stub
+		return isBOSS;
+	}
+	public int getLiveCost() {
+		// TODO Auto-generated method stub
+		return !isBOSS? 1: 7;
+	}
+	
+	////////////////
 }

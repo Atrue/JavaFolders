@@ -2,15 +2,14 @@ package game.network;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.ArrayList;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import game.engine.Configurations;
 import game.engine.Coordinate;
 import game.engine.Scheduler;
-import game.engine.Configurations;
 import game.engine.ServerLink;
 import game.engine.characters.Levels;
 import game.engine.characters.ListOfCharacters;
@@ -33,7 +32,7 @@ public class NetworkState implements Serializable, ServerLink {
 	NetworkState(ClientHandler[] cl) {
 		clients = cl;
 		config = new Configurations();
-		config.init(this, 1, cl.length);
+		config.init(1, cl.length);
 		startResourse = 10;
 		dieCount = 0;
 		
@@ -65,10 +64,10 @@ public class NetworkState implements Serializable, ServerLink {
 	}
 
 	
-	public void removeLive() throws JSONException{
+	public void removeLive(int lic) throws JSONException{
 		int l = config.getLives();
 		if (l > 0){
-			config.setLives(l-1);
+			config.setLives(l-lic);
 			configTick.put("lives", config.getLives());
 		}else{
 			s_endGame(false);
@@ -100,7 +99,8 @@ public class NetworkState implements Serializable, ServerLink {
 			for(Coordinate c: config.getStartCords()){
 				JSONObject var = new JSONObject();
 				Monster monster = Monster.copy(moncopy);
-				monster.addVariancy();
+				if (!monster.isBoss())
+					monster.addVariancy();
 				monster.setId(dieCount);
 				dieCount++;
 				monster.add(c, this, false, true);
@@ -134,7 +134,7 @@ public class NetworkState implements Serializable, ServerLink {
 			if (isKilled){
 				clients[who].doTransition(monster.getReward());
 			}else{
-				removeLive();
+				removeLive(monster.getLiveCost());
 			}
 		} catch (JSONException | IOException e) {
 			e.printStackTrace();
