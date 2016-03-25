@@ -1,5 +1,6 @@
 package game.engine.characters;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -10,17 +11,21 @@ import java.util.Iterator;
  */
 
 import game.engine.Coordinate;
-import game.engine.ServerLink;
+import game.network.ServerLink;
 import javafx.scene.control.Label;
+import javafx.scene.effect.DropShadow;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.scene.text.Font;
 
-public class Monster {
-	private static Pane parentView;
-	private ServerLink parent;
-    private boolean isGUI;
-    private boolean hasActivity;
+public class Monster implements Target{
+	//STATIC PANEL FOR DISPLAY TOWER
+    private static Pane parentView;
+    //Parent
+    private ServerLink parent;
+    
+    //Monster stats
     private boolean isBOSS = false;
     
     private boolean isDied = false;
@@ -44,13 +49,16 @@ public class Monster {
     private double vY = 0;
 	private boolean hasDirection;
 	private Coordinate nextPoint;
+	private double[] effectColor;
+	private Circle targetArea;
+    
+	//STATS
+    private boolean isGUI;
+    private boolean hasActivity;
+    
 
     /**
-     * Monster initialization
-     *
-     * @param healthPoints
-     * The health points increase as the game progresses to increase
-     * the difficulty for the player.
+     * GLOBAL METHODS
      */
     public Monster(double hp, double speed, double kGold, int t){
         maxHP = hp;
@@ -101,13 +109,20 @@ public class Monster {
         view.setPrefHeight(32 * kSize);
         view.setPrefWidth(32 * kSize);        
         
-        //HPview = new Rectangle(20 * kSize, 5);
-        //HPview.setFill(Color.color(0, 1, 0));
+        effectColor = new double[]{0,0,0};
+        
+        view.setOnMouseClicked(ActionEvent -> parent.s_setTarget(this));
+        
+        targetArea = new Circle(x, y, 10*kSize);
+    	targetArea.setStroke(Color.BROWN);
+    	targetArea.setStrokeDashOffset(5);
+    	targetArea.setVisible(false);
+    	targetArea.setFill(Color.color(0.5,0,0,0.2));
         
         
     	
     	parentView.getChildren().add(view);
-    	//parentView.getChildren().add(HPview);
+    	parentView.getChildren().add(targetArea);
     }
     public void addVariancy(){
     	vX = Math.random()*30 - 15;
@@ -124,9 +139,15 @@ public class Monster {
     	
     	if(isGUI){
     		parentView.getChildren().remove(view);
+    		parentView.getChildren().remove(targetArea);
     		//parentView.getChildren().remove(HPview);
     		view.setVisible(false);
     		//HPview.setVisible(false);
+    		targetArea.setVisible(false);
+    		if(parent.s_getTarget() != null && parent.s_getTarget().tEquals(this)){
+    			parent.s_setTarget(null);
+    		}
+    		
     	}
     	if(hasActivity){
     		parent.s_removeMonster(this, isKilled, who);
@@ -146,6 +167,7 @@ public class Monster {
     	this.x = x;
     	if(isGUI){
     		view.setLayoutX(x + vX - view.getPrefWidth()/2);
+    		targetArea.setCenterX(x + vX-6);
         	//HPview.setX(x + vX - view.getPrefWidth()*(5./16) - 5);
     	}
     }
@@ -153,6 +175,7 @@ public class Monster {
     	this.y = y;
     	if(isGUI){
     		view.setLayoutY(y + vY - view.getPrefHeight()/2 - 5);
+    		targetArea.setCenterY(y + vY);
     		//HPview.setY(y + vY - HPview.getHeight()/2 - 13);
     	}
     }
@@ -160,6 +183,7 @@ public class Monster {
     	this.x += x;
     	if(isGUI){
     		view.setLayoutX(view.getLayoutX() + x);
+    		targetArea.setCenterX(this.x + vX -6);
         	//HPview.setX(HPview.getX() + x);
     	}
     }
@@ -167,6 +191,7 @@ public class Monster {
     	this.y += y;
     	if(isGUI){
     		view.setLayoutY(view.getLayoutY() + y);
+    		targetArea.setCenterY(this.y + vY);
     		//HPview.setY(HPview.getY() + y);
     	}
     }
@@ -182,9 +207,15 @@ public class Monster {
     	reward = Math.pow(maxHP, 0.6);
     	curHP = maxHP;
     }
+    public void powWith(double k1, double k2){
+    	//reward *= 1+koef/25.;
+    	maxHP *= k1;
+    	reward *= k2;
+    	curHP = maxHP;
+    }
     public void toBOSS(){
     	isBOSS = true;
-    	maxHP *= 11;
+    	maxHP *= 13;
     	reward *= 15;
     	curHP = maxHP;
     }
@@ -234,10 +265,17 @@ public class Monster {
         	view.setTextFill(Color.color(1 - kHP, kHP, 0));
         }
     }
+    private void complicateColorEffect(boolean add, Color c){
+    	float v = add? 1: -1;
+    	effectColor[0] += v * c.getRed();
+    	effectColor[1] += v * c.getGreen();
+    	effectColor[2] += v * c.getBlue();
+    }
     public void addBuff(Buff b){
 		Buff buff = Buff.copy(b);
 		buff.setTarget(this);
 		buffList.add(buff);
+		complicateColorEffect(true, buff.getColor());
     }
     public boolean hasDirection(){
     	int dir = parent.s_getConfigurations().getDirection(getTileX(), getTileY());
@@ -280,11 +318,13 @@ public class Monster {
     	curSpeed = maxSpeed;
     }
     public void update(){
+    	
     	if (hasDirection){
     		for (Iterator<Buff> iterator = buffList.iterator(); iterator.hasNext();) {
         		Buff buff = iterator.next();
         		if (!buff.update()){
         			//buff.remove();
+        			complicateColorEffect(false, buff.getColor());
         	        iterator.remove();
         	    }
         	}
@@ -292,6 +332,21 @@ public class Monster {
     	}else{
     		hasDirection = true;
     		getNextCoord();
+    	}
+    	if(isGUI){
+    		if(buffList.size() > 0){
+    		DropShadow borderGlow = new DropShadow();
+    		borderGlow.setColor(Color.color(
+    				Math.min(effectColor[0], 1),
+    				Math.min(effectColor[1], 1),
+    				Math.min(effectColor[2], 1)
+    				));
+    		borderGlow.setOffsetX(0f);
+    		borderGlow.setOffsetY(0f);
+    		view.setEffect(borderGlow);
+    		}else{
+    			view.setEffect(null);
+    		}
     	}
        
     }
@@ -323,6 +378,61 @@ public class Monster {
 		// TODO Auto-generated method stub
 		return !isBOSS? 1: 7;
 	}
+	public String getPrettyHP(double hp){
+		String pretty = "";
+		while(hp > 1000){
+			hp /= 1000;
+			pretty += "k";
+		}
+		String f = hp > 10? String.valueOf((int)(hp)): String.format("%.1f", hp);
+		return f+pretty;
+	}
+	public String getBuffDesc(){
+		String ss = "";
+		for(Buff b:buffList){
+			ss += b.getId();
+		}
+		return ss;
+	}
 	
 	////////////////
+	@Override
+	public void activeTarget() {
+		targetArea.setVisible(true);
+	}
+	@Override
+	public void deactiveTarget() {
+		targetArea.setVisible(false);
+	}
+	@Override
+	public String[] getFullInfo() {
+		// TODO Auto-generated method stub
+		return new String[] {
+				!isBOSS? "Z": "!Z!",
+				getBuffDesc(),
+				"+",
+				getPrettyHP(curHP)+"/"+getPrettyHP(maxHP),
+				"u",
+				String.format( "%.1f", curSpeed),
+				"$",
+				String.valueOf(getReward())
+				
+		};
+	}
+	@Override
+	public int getUpgradePrice(){
+		return 0;
+	}
+	@Override
+	public int getSellPrice(){
+		return 0;
+	}
+	@Override
+	public boolean tEquals(Target obj) {
+		return obj.getTargetID().equals(this.getTargetID());
+	}
+	@Override
+	public String getTargetID() {
+		return "M"+getID();
+	}
 }

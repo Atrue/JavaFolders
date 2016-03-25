@@ -131,7 +131,8 @@ class ClientHandler implements Runnable{
 		   }
 	   }
 	   json.put("event", "login");
-	   json.put("message", "You connected to "+socket.getInetAddress()+":"+socket.getPort());
+	   //json.put("message", "You connected to "+socket.getInetAddress()+":"+socket.getPort());
+	   json.put("message", "You connected to server!");
 	   json.put("names", getOnlineUsers());
 	   json.put("special", isAdmin);
 	   send(json.toString());

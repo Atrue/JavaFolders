@@ -10,10 +10,10 @@ import org.json.JSONObject;
 import game.engine.Configurations;
 import game.engine.Coordinate;
 import game.engine.Scheduler;
-import game.engine.ServerLink;
 import game.engine.characters.Levels;
-import game.engine.characters.ListOfCharacters;
+import game.engine.characters.Settings;
 import game.engine.characters.Monster;
+import game.engine.characters.Target;
 import game.engine.characters.Tower;
 
 public class NetworkState implements Serializable, ServerLink {
@@ -27,16 +27,14 @@ public class NetworkState implements Serializable, ServerLink {
 
 	private int startResourse;
 
-	private int dieCount;
 	// CONSTRUCTORS
 	NetworkState(ClientHandler[] cl) {
 		clients = cl;
 		config = new Configurations();
 		config.init(1, cl.length);
 		startResourse = 10;
-		dieCount = 0;
 		
-		ListOfCharacters.init();
+		Settings.init();
 		Levels levels = new Levels(this);
 		config.setLevels(levels);
 		
@@ -101,8 +99,7 @@ public class NetworkState implements Serializable, ServerLink {
 				Monster monster = Monster.copy(moncopy);
 				if (!monster.isBoss())
 					monster.addVariancy();
-				monster.setId(dieCount);
-				dieCount++;
+				monster.setId(config.iterIdMonster());
 				monster.add(c, this, false, true);
 				var.put("vx", monster.getVariancyX());
 				var.put("vy", monster.getVariancyY());
@@ -170,7 +167,7 @@ public class NetworkState implements Serializable, ServerLink {
 		}
 	}
 	public synchronized void tryBuyTower(int id, int x, int y, int type) throws JSONException, IOException{
-		Tower tower = Tower.copy(ListOfCharacters.getTower(type, 0));
+		Tower tower = Tower.copy(Settings.getTower(type, 0));
 		if(clients[id].isTransition( -tower.getPrice()) &&	config.tryMapNode(x, y, 3)){
 			clients[id].doTransition( -tower.getPrice());
 			tower.setOwner(id);
@@ -319,6 +316,16 @@ public class NetworkState implements Serializable, ServerLink {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+
+	@Override
+	public void s_setTarget(Target t) {
+	}
+
+	@Override
+	public Target s_getTarget() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	

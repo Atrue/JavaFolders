@@ -3,7 +3,7 @@ package game.engine.characters;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-import game.engine.ServerLink;
+import game.network.ServerLink;
 
 public class Levels {
 	private ServerLink parent;
@@ -18,7 +18,7 @@ public class Levels {
 		for(int i=0;i<levels;i++){
 			int typew = i > 0 && i%5==0? 1: 0;
 			typew = (i-2)%5==0 && i >5 ?2:typew;
-			Wave wave = new Wave(typew, (Math.pow(10,i*10./100)) );
+			Wave wave = new Wave(typew, Settings.powMonOfLvl(i), Settings.powHPOfLvl(i) );
 			if ( (i+1) % 10 == 0)
 				wave.toBOSS();
 			waves.add(wave);
@@ -54,12 +54,19 @@ public class Levels {
 	public class Wave{
 		private int count = 10;
 		private Monster copy;
+		private Monster defaultCopy;
 		private double lastAdded = 0;
 		
 		
 		Wave(int type, double koef){
-			copy = Monster.copy(ListOfCharacters.getMonster(type));
+			copy = Monster.copy(Settings.getMonster(type));
 			copy.powWith(koef);
+		}
+		Wave(int type, double koefHP, double koefPrice){
+			copy = Monster.copy(Settings.getMonster(type));
+			defaultCopy = Monster.copy(Settings.getMonster(0));
+			defaultCopy.powWith(koefHP, koefPrice);
+			copy.powWith(koefHP, koefPrice);
 		}
 		private void toBOSS(){
 			this.count = 1;

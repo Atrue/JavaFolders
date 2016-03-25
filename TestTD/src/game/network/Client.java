@@ -18,7 +18,10 @@ public class Client implements Runnable{
 	private DataInputStream in;
 	private Socket socket;
 	private boolean isConnection;
-	public Client(String address, int port, String n){
+	public Client(){
+		
+	}
+	public void connect(String address, int port, String n){
 		name = n;
 		try {
 			InetAddress ipAddress = InetAddress.getByName(address);
@@ -30,7 +33,7 @@ public class Client implements Runnable{
 			e.printStackTrace();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.err.println(e.toString());
 		}
 	}
 	public void start(){
@@ -44,6 +47,9 @@ public class Client implements Runnable{
 		} catch (JSONException | IOException e) {
 			
 		}
+	}
+	public boolean isRunning(){
+		return isConnection;
 	}
 	@Override
     public void run() {

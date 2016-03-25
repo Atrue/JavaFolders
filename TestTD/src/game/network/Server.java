@@ -10,10 +10,16 @@ public class Server implements Runnable{
    private NetworkState gameServer;
    private boolean isStarted = false;
    
-   public Server(int port, int count) throws IOException    {
+   
+   public Server(){
+	   
+   }
+   
+   public void create(int port, int count) throws IOException    {
      clients = new ClientHandler[count];
 	 mainsocket = new ServerSocket(port);
 	 gameServer = new NetworkState(clients);
+	 
      new Thread(this).start();
       
    }
@@ -25,7 +31,12 @@ public class Server implements Runnable{
 			   Socket socket = mainsocket.accept(); 
 		       newClient(socket);
 		   }
-	   } catch(Exception x) { x.printStackTrace(); }
+	   } catch(Exception x) { 
+		   System.err.println("Server is down"); 
+	   }
+   }
+   public boolean isRunning(){
+	   return mainsocket != null;
    }
    public void startGame(){
 	   isStarted = true;

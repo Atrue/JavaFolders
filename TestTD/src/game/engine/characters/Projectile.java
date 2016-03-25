@@ -16,8 +16,8 @@ public class Projectile extends Label {
     private double x;   // Starting location of the projectile
     private double y;
     boolean isGUI;
-    private double speed = 3.0;
-    private double damage = 1.0;
+    private double speed;
+    private double damage;
 
     Projectile(Tower parent, Monster target, boolean isGUI){
         super("x");
@@ -52,6 +52,7 @@ public class Projectile extends Label {
     public void updateView(){
     	setLayoutX(x-10);
     	setLayoutY(y-10);
+    	setRotate(getRotate() + speed*5);
     }
     public Monster getTarget(){
         return target;

@@ -1,10 +1,12 @@
 package game.engine.characters;
 
-import game.engine.ServerLink;
+import game.network.ServerLink;
+import javafx.scene.paint.Color;
 
 public class Buff{
 	private int ownerID;
-	private double damage;
+	private int damage;
+	private double crit;
 	private double slow;
 	private double duration;
 	private double lostion;
@@ -14,10 +16,12 @@ public class Buff{
 	private String sDesc;
 	private Monster target;
 	
+	private Color color;
+	
 	public Buff(){
 	}
 	public Buff(double dmg, double slow, double chanse, double duration, String sI){
-		this.damage = dmg/duration;
+		this.crit = dmg;
 		this.slow = slow;
 		this.chanse = chanse;
 		this.duration = duration;
@@ -29,6 +33,7 @@ public class Buff{
 		if (from == null)
 			return null;
 		Buff to = new Buff();
+		to.crit = from.crit;
 		to.damage = from.damage;
 		to.duration = from.duration;
 		to.chanse = from.chanse;
@@ -36,18 +41,19 @@ public class Buff{
 		to.slow = from.slow;
 		to.sIcon = from.sIcon;
 		to.sDesc = from.sDesc;
+		to.color = from.color;
 		return to;
 	}
 	public Buff setA(double dmg, double slow, double chanse, double dur){
-		this.damage = dmg/dur;
+		this.crit = dmg;
 		this.chanse = chanse > 1? 1: chanse;
 		this.slow = slow >1? 1: slow;
 		this.duration = dur;
 		this.sDesc = labelString();
 		return this;
 	}
-	public void setB(double dmgK){
-		this.damage = damage*dmgK;
+	public void setB(int dmg){
+		this.damage = dmg;
 		this.sDesc = labelString();
 	}
 	public void setOwnerID(int id){
@@ -59,21 +65,21 @@ public class Buff{
 	public void setTarget(Monster monster){
 		target = monster;
 	}
-	public void setFullDamage(double dmg){
-		damage = dmg/duration;
-	}
 	public void setSlow(double k){
 		slow = k;
 	}
 	public void setDuration(double d){
 		duration = d;
 	}
+	public void setColor(Color c){
+		color = c;
+	}
 	
-	public double getFullDamage(){
-		return damage*duration;
+	public double getCrit(){
+		return crit;
 	}
 	public double getTickDamage(){
-		return damage;
+		return damage * getTick()/duration;
 	}
 	public double getDuration(){
 		return duration;
@@ -84,12 +90,14 @@ public class Buff{
 	public double getChanse(){
 		return chanse;
 	}
-	
+	public Color getColor(){
+		return color;
+	}
     public double getTick(){
 		return 1./ServerLink.getFPS();
 	}
     public String getId(){
-    	return sIcon;
+    	return "["+sIcon+"]";
     }
     public String getDesc(){
     	return sDesc;
@@ -101,7 +109,7 @@ public class Buff{
 	public boolean update(){
 		if(lostion > 0){
 			
-			target.takeDamage(damage * getTick(), ownerID);
+			target.takeDamage(getTickDamage(), ownerID);
 			target.slow(slow);
 			
 			lostion -= getTick();
@@ -113,16 +121,15 @@ public class Buff{
 	public String labelString(){
 		
 		
-		String chs = " have chanse "+(int)(chanse*100)+"% to";
-		String dmg = " deal "+(int)(damage*duration)+" damage";
-		String slw = " slow on "+(int)(slow*100)+"%";
-		String sec = " for "+(int)duration+" seconds";
+		String chs = " С шансом "+(int)(chanse*100)+"%";
+		String dmg = " наносит доп.:"+(int)((crit)*100)+"%"+"("+(int)(damage*crit)+" урона)";
+		String slw = " замедляет на :"+(int)(slow*100)+"%";
+		String sec = " в теч. "+(int)duration+"с.";
 		
-		String fully = "The attack";
+		String fully = getId();
 		fully += chanse < 1? chs: "";
-		fully += damage > 0
-					?slow > 0? dmg+" and"+slw: dmg
-					:slow > 0? slw: "";
+		fully += crit > 0? dmg: "";
+		fully += slow > 0? slw: "";
 		fully += duration != getTick()? sec: "";
 		return fully;
 		

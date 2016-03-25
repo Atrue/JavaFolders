@@ -9,13 +9,15 @@ import org.json.JSONObject;
 
 import game.MenuNavigator;
 import game.engine.characters.Levels;
-import game.engine.characters.ListOfCharacters;
+import game.engine.characters.Settings;
 import game.engine.characters.Monster;
 import game.engine.characters.Projectile;
+import game.engine.characters.Target;
 import game.engine.characters.Tower;
 import game.network.Client;
 import game.network.ClientLink;
 import game.network.Network;
+import game.network.ServerLink;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -25,6 +27,8 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.control.ButtonType;
 import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 /**
  * Responsible for all communications between user interface and underlying
  * frameworks. The initialize method starts the game loop when called through
@@ -40,7 +44,7 @@ public class GameManager implements ServerLink, ClientLink {
 	private Client client;
 
 	// private Group tilemapGroup;
-	private Tower target;
+	private Target target;
 	// private Label hoverTower;
 	/**
 	 * Initializes the game
@@ -61,7 +65,7 @@ public class GameManager implements ServerLink, ClientLink {
 		gameController.setGameManager(this);
 		// Generates the map with the given resolution
 		StackPane gamePane = new StackPane();
-		gamePane.getChildren().add(gameController.getGeneralLayout());
+		//gamePane.getChildren().add(gameController.getGeneralLayout());
 		config.setParentView(gameController.getGeneralLayout());
 
 		gamePane.getChildren().add(gameUI);
@@ -71,8 +75,8 @@ public class GameManager implements ServerLink, ClientLink {
 		gameController.setListeners();
 		gameController.setNetPane(type == 1);
 		gameController.setTooltips();
-		if (!ListOfCharacters.isinit())
-			ListOfCharacters.init();
+		if (!Settings.isinit())
+			Settings.init();
 
 		MenuNavigator.addScene(gameScene, 1);
 		MenuNavigator.setScene(1);
@@ -104,8 +108,7 @@ public class GameManager implements ServerLink, ClientLink {
 			gameController.repaintBG(config.getMap());
 			s_updateLabels();
 		} catch (JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.err.println("INVALID DATA IN JSON CONFIG!!!");
 		}
 	}
 
@@ -119,13 +122,8 @@ public class GameManager implements ServerLink, ClientLink {
 	
 
 	
-	public Tower getTarget(){
-		return target;
-	}
-
-	public void setTarget(Tower object) {
-		target = object;
-	}
+	
+	
 
 	public boolean transition(int money) {
 		if (config.getResources() - money >= 0) {
@@ -147,11 +145,11 @@ public class GameManager implements ServerLink, ClientLink {
 		
 		if (!NET) {
 			// Verify the user can afford the tower
-			Tower tower = ListOfCharacters.getTower(type, 0);
+			Tower tower = Settings.getTower(type, 0);
 			if (config.getResources() >= tower.getPrice()) {
 				if (config.tryMapNode(xTile, yTile, 3)) {
 					addTower(xTile, yTile, type, 0);
-					config.setResources(config.getResources() - tower.getPrice());
+					transition(tower.getPrice());
 				}else{
 					gameController.showBlockedPop(xCords, yCords);
 				}
@@ -168,7 +166,7 @@ public class GameManager implements ServerLink, ClientLink {
 	private void addTower(int x, int y, int type, int who) {
 		config.tryMapNode(x, y, 3);
 		gameController.repaintBG(config.getMap());
-		Tower tower = ListOfCharacters.getTower(type, 0);
+		Tower tower = Settings.getTower(type, 0);
 		Tower buyTower = Tower.copy(tower);
 		config.addTower(buyTower);
 		buyTower.add(x, y, this, true, !NET);
@@ -399,6 +397,7 @@ public class GameManager implements ServerLink, ClientLink {
 	public void s_createMonsters(Monster moncopy) {
 		for (Coordinate c : config.getStartCords()) {
 			Monster monster = Monster.copy(moncopy);
+			monster.setId(config.iterIdMonster());
 			if (!monster.isBoss())
 				monster.addVariancy();
 			monster.add(c, this, true, true);
@@ -436,15 +435,17 @@ public class GameManager implements ServerLink, ClientLink {
 		gameController.updateLabels(Integer.toString(config.getLevel()),
 				Integer.toString(config.getLives()), Integer.toString(config.getResources()),
 				Integer.toString(timer.getGameTime()));
-		gameController.updateBuyers();
+		gameController.updateBuyers(config.getResources());
 		if (target != null) {
-			gameController.updateTarget(target.getLevel(),
-					target.getAttackDamage(), target.getAttackRange(),
-					target.getAttackCD(), target.upgradePrice(),
-					target.getSellCost(),
-					target.getBuff() != null
-							? "[" + target.getBuff().getId() + "]" : "",
-									target.getBuff() != null ? target.getBuff().getDesc() : "");
+			String[] info = target.getFullInfo();			
+			gameController.updateTarget(
+					info[0], info[1], info[2], info[3], info[4], info[5], info[6], info[7],
+					String.valueOf(target.getUpgradePrice()),
+					String.valueOf(target.getSellPrice()),
+					target.getUpgradePrice() != 0,
+					target.getSellPrice() != 0,
+					config.getResources() >= target.getUpgradePrice()
+					);
 		}
 	}
 	
@@ -458,7 +459,21 @@ public class GameManager implements ServerLink, ClientLink {
 	public void s_debug(String string) {
 		System.out.println(string);
 	}
-	
+	@Override
+	public Target s_getTarget(){
+		return target;
+	}
+	@Override
+	public void s_setTarget(Target t){
+		if(target != null)
+			target.deactiveTarget();
+		target = t;
+		if(target != null){
+			target.activeTarget();
+		}
+		s_updateLabels();
+		gameController.setEnableTargetInfo(target != null);
+	}
 	
 	// As client
 

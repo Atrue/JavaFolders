@@ -11,16 +11,19 @@ import org.json.JSONObject;
 
 import game.MenuNavigator;
 import game.engine.GameManager;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
+import javafx.util.Duration;
 
 public class Network implements ClientLink{
 	
 	private NetworkController controller;
-	private static Client client;
-	private static Server server;
+	private static Client client = new Client();
+	private static Server server = new Server();
 	
 	public void init() throws IOException{
 		
@@ -41,8 +44,10 @@ public class Network implements ClientLink{
         MenuNavigator.setScene(2);
 	}
 	public void createServer(String port, int count){
+		if (server.isRunning() || client.isRunning())
+			closeConnections();
 		try {
-			server = new Server(Integer.parseInt(port), count);
+			server.create(Integer.parseInt(port), count);
 			controller.connectClient(null);
 			controller.connectionPack(true);
 		} catch (NumberFormatException e) {
@@ -56,8 +61,8 @@ public class Network implements ClientLink{
 	}
 	
 	public void connectClient(String addr, String port, String name) {
-		if (client == null){
-			client = new Client(addr, Integer.parseInt(port), name);
+		if (!client.isRunning()){
+			client.connect(addr, Integer.parseInt(port), name);
 			client.setLink(this);
 			client.start();
 			controller.connectionPack(true);
@@ -68,13 +73,13 @@ public class Network implements ClientLink{
 		
 	}
 	public static void closeConnections(){
-		if (client != null){
+		if (client.isRunning()){
 			client.stop();
-			if (server != null){
-				try {
-					server.stop();
-				} catch (IOException e) {}
-			}
+		}
+		if (server.isRunning()){
+			try {
+				server.stop();
+			} catch (IOException e) {}
 		}
 	}
 	public boolean isServer(){

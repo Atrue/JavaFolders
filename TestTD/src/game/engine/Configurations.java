@@ -52,6 +52,7 @@ public class Configurations implements Serializable {
 								// are being spawned
 	private int lives; // numbers of monster escapes allowed before game
 								// ends
+	private int monsterCount;
 	private ArrayList<Tower> playerTowers; // holds all tower references
 													// on the map
 	private ArrayList<Monster> monstersAlive; // holds monster references
@@ -62,11 +63,12 @@ public class Configurations implements Serializable {
 	// CONSTRUCTORS
 	public void init(int type, int count) {
 		state = IS_PAUSED;
-		resources = 10;
+		resources = 10000;
 		level = 0;
 		lives = 20;
 		playerTowers = new ArrayList<Tower>();
 		monstersAlive = new ArrayList<Monster>();
+		monsterCount = 0;
 
 		startCords = new ArrayList<>();
 		if (type == 0) {
@@ -405,6 +407,10 @@ public class Configurations implements Serializable {
 
 	public void removeTower(Tower tower) {
 		playerTowers.remove(tower);
+	}
+
+	public int iterIdMonster() {
+		return monsterCount++;
 	}
 
 }

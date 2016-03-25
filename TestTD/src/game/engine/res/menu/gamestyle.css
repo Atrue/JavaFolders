@@ -136,7 +136,7 @@
 }
 #targetBuffDesc{
 	-fx-font-style:italic;
-	-fx-font-size:12px;
+	-fx-font-size:11px;
 }
 .label_def_text{
 	-fx-font: 19px "Serif";
@@ -159,3 +159,4 @@
 	-fx-border-radius: 5px;
 	-fx-font-weight:bold;
 }
+

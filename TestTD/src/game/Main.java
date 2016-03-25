@@ -3,6 +3,7 @@ package game;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 
@@ -22,6 +23,7 @@ public class Main extends Application {
         stage.setResizable(false);
         stage.show();
         MenuNavigator.setStage(stage);
+        stage.getIcons().add(new Image("game/engine/res/menu/icon/arr_up.png"));
         MenuNavigator.setScene(0);
     }
 

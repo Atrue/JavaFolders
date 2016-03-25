@@ -5,9 +5,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 import game.engine.Coordinate;
-import game.engine.ServerLink;
+import game.network.ServerLink;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 
@@ -18,56 +19,62 @@ import javafx.scene.text.TextFlow;
  * Each tower spawns a worker thread to poll for nearby monsters
  * to make attacks on.
  */
-public class Tower extends TextFlow{
-    private static Pane view;
-    private int ownerID;
-    private String ownerName;
+public class Tower implements Target{
+	
+	//STATIC PANEL FOR DISPLAY TOWER
+    private static Pane parentView;
+    //Parent
     private ServerLink parent;
     
-	private Text tName;
-	private Text tLevel;
-	private boolean isGUI; // false = server
-	private boolean hasActivity; // false = connected client
-	private int levelTower;
+    
+    //Information of owner
+    private int ownerID;
+    private String ownerName;
+    
+    //Tower stats
+    private int levelTower;
 	private int attackDamage;                       // Determines amount of health to reduce from monsters per attack
     private double attackSpeed;                     // Determines the time a tower must wait after an attack
-    private double attackCD = 1.0;
+    private double attackCD;
     private double timeout = 0;
     private int attackRange;                        // Sets the minimum range the tower can make attacks in
-    private int upgradeTime;                        // Time in milliseconds it takes to complete an upgrade.
+    private int upgradeTime = 1;                        // Time in milliseconds it takes to complete an upgrade.
     private int buyCost;
     private int sellCost;                           // Determines the resources gained by selling the tower
     private ArrayList<Projectile> projectileList;   // Used by the gui thread to create animations for attacks
     private Coordinate coords;                      // Represents the coordinates of the tower on the map
     private Monster target;
     private Buff buff;
-
 	private int typeTower;
-
+    
+	//States
+	private boolean isGUI; // false = server
+	private boolean hasActivity; // false = connected client
+	
+	
+    //GUI Elements
+	private TextFlow view; // main view
+	private Text tName;
+	private Text tLevel;
+	private Circle targetArea;
 	private Color color;
-    //private TowerAttackerService towerAttacker;     // A worker thread for polling monster locations used for attacks
-
 
     /**
-     * All towers are created with basic stats which are scaled with
-     * upgrades.
-     *
-     * @param x
-     * The x location on the map where the tower is placed.
-     * @param y
-     * The y location on the map where the tower is placed.
+     * GLOBAL METHODS
      */
     public Tower(){
-    	super();
-    	projectileList = new ArrayList<Projectile>();
-    	tName = new Text();
-    	tLevel = new Text();
-    	 
-    	getChildren().addAll(tName, tLevel);
+    	  	
     }
+    public static Tower hoverTower(){
+    	Tower t = new Tower();
+    	t.view = new TextFlow();
+    	t.tName = new Text();
+    	t.tLevel = new Text();
+    	t.view.getChildren().addAll(t.tName, t.tLevel);
+    	return t;
+    }
+    
     public Tower(int attack, double AS, double asCD, int range, int buycost, int level, int type, Color colors, Buff b){
-    	super();
-    	
     	attackDamage = attack;
     	attackSpeed = AS;
     	attackRange = range;
@@ -96,30 +103,62 @@ public class Tower extends TextFlow{
     	return to;
     }
     public static void setParentView(Pane v){
-    	view = v;
+    	parentView = v;
     }
+    
+    /**
+     * MAIN METODS
+     */
     public void add(int x , int y, ServerLink par, boolean visible, boolean activity){
+    	projectileList = new ArrayList<Projectile>();  
     	coords = new Coordinate(x , y);
     	parent = par;
     	isGUI = visible;
     	hasActivity = activity;
+    	
     	if (isGUI){
-	    	updateLabels();
-	        setId("tower_state");	        
-	        setPrefWidth(32);  
-	        setPrefHeight(32); 
-	        setHeight(32);
-	        setWidth(32);
-	    	setLayoutX(coords.getExactX()-16);
-	    	setLayoutY(coords.getExactY()-16); 
-	    	view.getChildren().add(this);
+    		addGUI();
     	}
+    }
+    public void addGUI(){
+    	view = new TextFlow();
+    	tName = new Text();
+    	tLevel = new Text();
+    	view.getChildren().addAll(tName, tLevel);
+    	
+    	updateLabels();
+    	if(buff != null)
+    		buff.setColor(color);
+    	
+    	//main view
+        view.setId("tower_state");	        
+        view.setPrefWidth(32);  
+        view.setPrefHeight(32); 
+        view.setLayoutX(coords.getExactX()-16);
+        view.setLayoutY(coords.getExactY()-16);
+        
+        view.setOnMouseClicked(ActionEvent -> parent.s_setTarget(this));
+        
+        
+        //area of selected tower
+    	targetArea = new Circle(getX(), getY(), attackRange);
+    	targetArea.setStroke(color);
+    	targetArea.setStrokeDashOffset(5);
+    	targetArea.setVisible(false);
+    	targetArea.setFill(Color.color(color.getRed(), color.getGreen(), color.getBlue(), 0.2));
+		
+    	//adding
+    	parentView.getChildren().add(targetArea);
+    	parentView.getChildren().add(view);
     }
     public void setOwner(int id){
     	ownerID = id;
-    	getStyleClass().add("towerBG_"+id);
-    	if (buff != null){
-    		buff.setOwnerID(ownerID);
+    	
+    	if (isGUI){
+	    	view.getStyleClass().add("towerBG_"+id);
+	    	if (buff != null){
+	    		buff.setOwnerID(ownerID);
+	    	}
     	}
     }
     public void remove(){
@@ -127,10 +166,15 @@ public class Tower extends TextFlow{
     		prj.remove();
     	}
     	if (isGUI){
-    		view.getChildren().remove(this);
-    		setVisible(false);
+    		parentView.getChildren().remove(this);
+    		view.setVisible(false);
     	}
     }
+    
+    /**
+     * CODE ONLY
+     */
+    
     public boolean inRange(Monster target){
     	double x2 = target.getX();
     	double y2 = target.getY();
@@ -173,6 +217,48 @@ public class Tower extends TextFlow{
     	    }
     	}
     }
+    public void createProjectile(Monster target){
+    	Projectile proj = new Projectile(this, target, isGUI);
+    	proj.add();
+        projectileList.add(proj);
+    }
+    
+    /**
+     * Upgrades the towers stats.
+     */
+    public boolean isUpgradeable(){
+    	return Settings.isTowerExist(typeTower, levelTower);
+    }
+    public int upgradePrice(){
+    	if (isUpgradeable()){
+    		return Settings.getTower(typeTower, levelTower).getPrice();
+    	}
+    	return 0;
+    }
+    
+    public void upgradeTower(){
+    	if (isUpgradeable()){
+    		Tower up = Settings.getTower(typeTower, levelTower);
+    		attackDamage = up.attackDamage;
+    		attackSpeed = up.attackSpeed;
+    		attackRange = up.attackRange;
+    		attackCD = up.attackCD;
+    		buyCost = up.buyCost;
+    		sellCost += buyCost/2;
+    		targetArea.setRadius(attackRange);
+    		levelTower++;
+    		buff = Buff.copy(up.buff);
+    		if(buff != null)
+        		buff.setColor(color);
+    		updateLabels();
+    	}
+    }
+
+
+    
+    /**
+     * GUI METHODS
+     */
     
     public void updateLabels(){
     	if(isGUI){
@@ -186,46 +272,15 @@ public class Tower extends TextFlow{
 	        tLevel.setStyle("-fx-font-size:10; -fx-text-alignment:center");
     	}
     }
-    /**
-     * Upgrades the towers stats.
-     */
-    public boolean isUpgradeable(){
-    	return ListOfCharacters.isTowerExist(typeTower, levelTower);
-    }
-    public int upgradePrice(){
-    	if (isUpgradeable()){
-    		return ListOfCharacters.getTower(typeTower, levelTower).getPrice();
-    	}
-    	return 0;
-    }
+
     
-    public void upgradeTower(){
-    	if (isUpgradeable()){
-    		Tower up = ListOfCharacters.getTower(typeTower, levelTower);
-    		attackDamage = up.attackDamage;
-    		attackSpeed = up.attackSpeed;
-    		attackRange = up.attackRange;
-    		attackCD = up.attackCD;
-    		buyCost = up.buyCost;
-    		sellCost += buyCost/2;
-    		levelTower++;
-    		buff = Buff.copy(up.buff);
-    		updateLabels();
-    	}
-    }
-
     /**
-     * Creates a projectile when the tower attacks a monster.
-     *
-     * @param target
-     * The target location of the projectile
+     * GETTERS AND SETTERS
+     * @return 
      */
-    public void createProjectile(Monster target){
-    	Projectile proj = new Projectile(this, target, isGUI);
-    	proj.add();
-        projectileList.add(proj);
+    public TextFlow getView(){
+    	return view;
     }
-
     public Text[] getText(){
     	return new Text[]{tName, tLevel}.clone();
     }
@@ -287,14 +342,11 @@ public class Tower extends TextFlow{
         return coords;
     }
     public int getLevel() {
-		// TODO Auto-generated method stub
 		return levelTower;
 	}
     public int getType() {
-		// TODO Auto-generated method stub
 		return typeTower;
 	}
-    
     
     public Buff getBuff(){
     	return buff;
@@ -338,6 +390,53 @@ public class Tower extends TextFlow{
 	}
 	public void setType(int type){
 		this.typeTower = type;
+	}
+	
+	/**
+	 * AS TARGET
+	 * @see game.engine.characters.Target
+	 */
+	
+	@Override
+	public void activeTarget() {
+		targetArea.setVisible(true);
+	}
+	@Override
+	public void deactiveTarget() {
+		targetArea.setVisible(false);
+	}
+	@Override
+	public String[] getFullInfo() {
+		// TODO Auto-generated method stub
+		String[] d = new String[] {
+				"X["+(levelTower+1)+"]",
+				buff != null? buff.getDesc(): "",
+				"F(x)",
+				String.valueOf(attackDamage),
+				"R",
+				String.valueOf(attackRange),
+				"μ",
+				String.format( "%.2f", attackCD),
+				
+		};
+		return d;
+	}
+	@Override
+	public int getUpgradePrice(){
+		return upgradePrice();
+	}
+	@Override
+	public int getSellPrice(){
+		return sellCost;
+	}
+	@Override
+	public boolean tEquals(Target obj) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+	@Override
+	public String getTargetID() {
+		return "T"+getTileX()+"X"+getTileY();
 	}
 
 

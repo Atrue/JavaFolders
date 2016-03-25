@@ -10,8 +10,6 @@
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.RowConstraints?>
-<?import javafx.scene.text.Text?>
-<?import javafx.scene.text.TextFlow?>
 
 <Pane prefHeight="544.0" prefWidth="1024.0" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="game.engine.GameController">
    <children>
@@ -24,10 +22,13 @@
           <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
         </rowConstraints>
          <children>
-            <Pane fx:id="ongrouppane" style="-fx-background-color: green;" />
-            <GridPane id="bg_right_panel" alignment="BASELINE_RIGHT" maxHeight="800.0" maxWidth="320.0" minHeight="544.0" minWidth="320.0" vgap="10.0" GridPane.columnIndex="1">
+            <Pane fx:id="ongrouppane" style="-fx-background-color: green;">
+               <children>
+                  <Pane fx:id="helpPane" layoutX="704.0" layoutY="30.0" />
+               </children></Pane>
+            <GridPane id="bg_right_panel" alignment="BASELINE_RIGHT" maxHeight="800.0" maxWidth="320.0" minHeight="544.0" minWidth="320.0" vgap="7.0" GridPane.columnIndex="1">
                       <padding>
-                  <Insets bottom="50.0" left="40.0" right="40.0" top="40.0" />
+                  <Insets bottom="30.0" left="20.0" right="30.0" top="30.0" />
                </padding>
                <children>
                   <Label styleClass="label_def_text" text="t" GridPane.columnIndex="2" GridPane.rowIndex="1" />
@@ -49,11 +50,11 @@
                    <Label fx:id="timeLabel" styleClass="label_bold_text" text="0" GridPane.columnIndex="3" GridPane.rowIndex="1" />
                   <GridPane fx:id="targetTowerInfo" prefHeight="300.0" visible="false" GridPane.columnSpan="4" GridPane.halignment="CENTER" GridPane.rowIndex="5" GridPane.valignment="CENTER">
                     <columnConstraints>
-                      <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                      <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="70.0" />
                       <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
                     </columnConstraints>
                     <rowConstraints>
-                        <RowConstraints minHeight="50.0" prefHeight="50.0" vgrow="SOMETIMES" />
+                        <RowConstraints minHeight="60.0" prefHeight="50.0" vgrow="SOMETIMES" />
                       <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES" />
                       <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES" />
                       <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES" />
@@ -67,13 +68,7 @@
                         <Label fx:id="targetCH3" styleClass="label_def_text" text="μ" GridPane.halignment="CENTER" GridPane.rowIndex="3" />
                         <Label fx:id="targetSpeed" styleClass="label_bold_text" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="3" />
                         <Label fx:id="targetName" styleClass="label_Y_text" textAlignment="CENTER" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
-                        <TextFlow prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="1">
-                           <children>
-                              <Text fx:id="targetBuffId" strokeType="OUTSIDE" strokeWidth="0.0" />
-                              <Text fx:id="targetBuffDesc" strokeType="OUTSIDE" strokeWidth="0.0" />
-                           </children>
-                        </TextFlow>
-                        <Button fx:id="targetUpgradeButton" defaultButton="true" minHeight="32.0" minWidth="64.0" mnemonicParsing="false" GridPane.halignment="CENTER" GridPane.rowIndex="4" GridPane.valignment="CENTER">
+                        <Button fx:id="targetUpgradeButton" defaultButton="true" minHeight="32.0" minWidth="96.0" mnemonicParsing="false" GridPane.halignment="CENTER" GridPane.rowIndex="4" GridPane.valignment="CENTER">
                            <GridPane.margin>
                               <Insets bottom="10.0" top="10.0" />
                            </GridPane.margin>
@@ -81,7 +76,7 @@
                               <Label fx:id="targetUpgradePrice" alignment="CENTER_RIGHT" contentDisplay="CENTER" maxWidth="1.7976931348623157E308" styleClass="label_bold_text" text="100" />
                            </graphic>
                         </Button>
-                        <Button fx:id="targetSellButton" defaultButton="true" lineSpacing="1.0" maxHeight="64.0" maxWidth="64.0" minHeight="32.0" minWidth="64.0" mnemonicParsing="false" textAlignment="JUSTIFY" wrapText="true" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="4" GridPane.valignment="CENTER">
+                        <Button fx:id="targetSellButton" defaultButton="true" lineSpacing="1.0" maxHeight="64.0" maxWidth="64.0" minHeight="32.0" minWidth="96.0" mnemonicParsing="false" textAlignment="JUSTIFY" wrapText="true" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="4" GridPane.valignment="CENTER">
                            <GridPane.margin>
                               <Insets bottom="10.0" top="10.0" />
                            </GridPane.margin>
@@ -89,6 +84,7 @@
                               <Label fx:id="targerSellPrice" alignment="CENTER_RIGHT" contentDisplay="RIGHT" maxWidth="1.7976931348623157E308" styleClass="label_bold_text" text="100" />
                            </graphic>
                         </Button>
+                        <Label fx:id="targetBuffDesc" wrapText="true" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
                      </children>
                      <GridPane.margin>
                         <Insets top="15.0" />
@@ -126,7 +122,7 @@
                   </GridPane>
                   <Label alignment="CENTER" contentDisplay="CENTER" maxWidth="1.7976931348623157E308" styleClass="label_def_text" text="Your palitre:" textAlignment="CENTER" visible="false" GridPane.columnSpan="4" GridPane.rowIndex="8" />
                   <Label alignment="CENTER" maxWidth="1.7976931348623157E308" styleClass="label_def_text" text="#Y" textAlignment="CENTER" GridPane.columnSpan="4" GridPane.rowIndex="3" />
-                  <GridPane fx:id="messagesPane" minHeight="60.0" GridPane.columnSpan="4" GridPane.rowIndex="7">
+                  <GridPane fx:id="messagesPane" minHeight="80.0" GridPane.columnSpan="4" GridPane.rowIndex="7">
                     <columnConstraints>
                       <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
                     </columnConstraints>
@@ -137,7 +133,7 @@
                      <children>
                         <ScrollPane hbarPolicy="NEVER" prefHeight="48.0" prefWidth="200.0">
                            <content>
-                              <TextArea fx:id="areaMessages" editable="false" prefHeight="56.0" prefWidth="199.0" />
+                              <TextArea fx:id="areaMessages" editable="false" prefHeight="56.0" prefWidth="236.0" />
                            </content>
                         </ScrollPane>
                         <TextField fx:id="inputMessage" minHeight="20.0" onAction="#sendMessage" prefHeight="20.0" GridPane.rowIndex="1" />
@@ -145,10 +141,10 @@
                   </GridPane>
                </children>
                <columnConstraints>
-                  <ColumnConstraints minWidth="50.0" />
-                  <ColumnConstraints minWidth="50.0" />
-                  <ColumnConstraints minWidth="50.0" />
-                  <ColumnConstraints minWidth="50.0" />
+                  <ColumnConstraints minWidth="60.0" />
+                  <ColumnConstraints minWidth="60.0" />
+                  <ColumnConstraints minWidth="60.0" />
+                  <ColumnConstraints minWidth="60.0" />
                   <ColumnConstraints />
                   <ColumnConstraints />
                   <ColumnConstraints />
