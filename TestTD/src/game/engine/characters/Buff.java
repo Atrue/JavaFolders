@@ -94,7 +94,7 @@ public class Buff{
 		return color;
 	}
     public double getTick(){
-		return 1./ServerLink.getFPS();
+		return 1./Settings.getFPS();
 	}
     public String getId(){
     	return "["+sIcon+"]";

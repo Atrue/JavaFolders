@@ -189,7 +189,7 @@ public class Tower implements Target{
     	return this.timeout == 0;
     }
     public double getTick(){
-		return 1./ServerLink.getFPS();
+		return 1./Settings.getFPS();
 	}
     public void update(){
     	if (timeout > 0){

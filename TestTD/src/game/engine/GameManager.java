@@ -14,6 +14,7 @@ import game.engine.characters.Monster;
 import game.engine.characters.Projectile;
 import game.engine.characters.Target;
 import game.engine.characters.Tower;
+import game.engine.characters.Ward;
 import game.network.Client;
 import game.network.ClientLink;
 import game.network.Network;
@@ -151,8 +152,10 @@ public class GameManager implements ServerLink, ClientLink {
 					addTower(xTile, yTile, type, 0);
 					transition(tower.getPrice());
 				}else{
-					gameController.showBlockedPop(xCords, yCords);
+					gameController.showBlockedPop(xCords, yCords, true);
 				}
+			}else{
+				gameController.showBlockedPop(xCords, yCords, false);
 			}
 		} else {
 			try {
@@ -474,7 +477,24 @@ public class GameManager implements ServerLink, ClientLink {
 		s_updateLabels();
 		gameController.setEnableTargetInfo(target != null);
 	}
-	
+	@Override
+	public void s_addWard(Ward ward) {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
+	public void s_removeWard(boolean st) {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
+	public boolean s_isServer() {
+		return !NET;
+	}
+	@Override
+	public boolean s_isGUI() {
+		return true;
+	}
 	// As client
 
 	@Override
@@ -490,6 +510,16 @@ public class GameManager implements ServerLink, ClientLink {
 				}
 				case "lives":{
 					config.setLives((int)value);
+					break;
+				}
+				case "failTower":{
+					try {
+						JSONArray info = (JSONArray)value;
+						Coordinate cord = new Coordinate(info.getInt(0), info.getInt(1));
+						gameController.showBlockedPop(cord.getExactX(), cord.getExactY(), info.getBoolean(2));
+					} catch (JSONException e) {
+						System.err.println("wrong info in failTower:"+e.toString());
+					}
 					break;
 				}
 				}
@@ -600,6 +630,10 @@ public class GameManager implements ServerLink, ClientLink {
 			}
 		});
 	}
+
+
+
+	
 
 
 }

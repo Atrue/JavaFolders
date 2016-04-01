@@ -126,6 +126,10 @@ public class Client implements Runnable{
              	   }
              	   break;
                 }
+                case "failTower":{
+                	link.c_special("failTower", json.getJSONArray("info"));
+                	break;
+                }
                 case "money":{
                 	link.c_money(json.getInt("value"));
                 	break;

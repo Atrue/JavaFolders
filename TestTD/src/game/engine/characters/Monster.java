@@ -394,6 +394,15 @@ public class Monster implements Target{
 		}
 		return ss;
 	}
+	private String getStatus(){
+		if(type == 0){
+			return "[@dfl]";
+		}else if (type == 1) {
+			return "[@spd]";
+		}else{
+			return "[@hgt]";
+		}
+	}
 	
 	////////////////
 	@Override
@@ -408,7 +417,7 @@ public class Monster implements Target{
 	public String[] getFullInfo() {
 		// TODO Auto-generated method stub
 		return new String[] {
-				!isBOSS? "Z": "!Z!",
+				(!isBOSS? "Z": "!Z!") + getStatus(),
 				getBuffDesc(),
 				"+",
 				getPrettyHP(curHP)+"/"+getPrettyHP(maxHP),

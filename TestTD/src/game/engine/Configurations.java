@@ -180,7 +180,7 @@ public class Configurations implements Serializable {
 	private Group group;
 
 	private boolean testAndAdd(int x, int y, int dir, ArrayList<Integer[]> pather, int[][] map) {
-		if (x >= 0 && y >= 0 && x < map.length && y < map[x].length && (map[x][y] == 0 || map[x][y] == 4)) {
+		if (x >= 0 && y >= 0 && x < map.length && y < map[x].length && (map[x][y] == 0 || map[x][y] == 4 || map[x][y] == 5)) {
 			return true;
 		}
 		return false;

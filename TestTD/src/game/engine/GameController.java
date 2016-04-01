@@ -128,6 +128,7 @@ public class GameController {
     private boolean hoverState = false;
     private Tower hoverTower;
 	private Popup popup;
+	private Label popup_label;
     
 
     
@@ -265,19 +266,20 @@ public class GameController {
     	popup = new Popup();
     	popup.setX(MenuNavigator.stage.getX()+ MenuNavigator.stage.getWidth()); 
 	    popup.setY(MenuNavigator.stage.getY()+ MenuNavigator.stage.getHeight());
-	    Label blocked = new Label("Blocked!");
-	    blocked.setPrefHeight(32);
-	    blocked.setPrefWidth(100);
-	    blocked.getStyleClass().add("blocked");
-	    blocked.setAlignment(Pos.CENTER);
-	    popup.getContent().add(blocked);
+	    popup_label = new Label("Blocked!");
+	    popup_label.setPrefHeight(32);
+	    popup_label.setPrefWidth(100);
+	    popup_label.getStyleClass().add("blocked");
+	    popup_label.setAlignment(Pos.CENTER);
+	    popup.getContent().add(popup_label);
 	    popup.setAutoHide(true);
     }
-    public void showBlockedPop(double x, double y){
+    public void showBlockedPop(double x, double y, boolean state){
 	    Parent parent = ongrouppane.getParent();
         // Popup will be shown at upper left corner of calenderbutton
         final double layoutX = parent.getScene().getWindow().getX() + parent.getScene().getX() - 50;
         final double layoutY = parent.getScene().getWindow().getY() + parent.getScene().getY() - 16;
+        popup_label.setText(state? "Blocked!": "No money!");
         popup.show(parent, layoutX + x, layoutY + y);
 		new Timeline(new KeyFrame(
     			Duration.millis(1234),

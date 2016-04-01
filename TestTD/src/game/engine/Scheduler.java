@@ -3,6 +3,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 import game.engine.characters.Monster;
+import game.engine.characters.Settings;
 import game.engine.characters.Tower;
 import game.network.ServerLink;
 import javafx.animation.Animation;
@@ -19,12 +20,12 @@ public class Scheduler{
 		KeyFrame frame;
 		if (!light){
 			frame = new KeyFrame(
-	    			Duration.millis(1000 / ServerLink.getFPS()),
+	    			Duration.millis(1000 / Settings.getFPS()),
 	    			tick -> tick()
 	    			);
 		}else{
 			frame = new KeyFrame(
-	    			Duration.millis(1000 / ServerLink.getFPS()),
+	    			Duration.millis(1000 / Settings.getFPS()),
 	    			tick -> lightTick()
 	    			);
 		}
@@ -33,7 +34,7 @@ public class Scheduler{
 	}
 	
 	public double getTick(){
-		return 1./ServerLink.getFPS();
+		return 1./Settings.getFPS();
 	}
 	public void notifyTimer(){
 		gametime = WAVE_TIME;

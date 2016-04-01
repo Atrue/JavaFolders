@@ -95,7 +95,7 @@ public class Levels {
 			return count;
 		}
 		public double getTick(){
-			return 1./ServerLink.getFPS();
+			return 1./Settings.getFPS();
 		}
 		public Monster getMonster(){
 			if (count > 0){

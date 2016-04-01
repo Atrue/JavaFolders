@@ -15,6 +15,7 @@ import game.engine.characters.Settings;
 import game.engine.characters.Monster;
 import game.engine.characters.Target;
 import game.engine.characters.Tower;
+import game.engine.characters.Ward;
 
 public class NetworkState implements Serializable, ServerLink {
 	private static final long serialVersionUID = 7170212054503203348L;
@@ -184,6 +185,15 @@ public class NetworkState implements Serializable, ServerLink {
 	    	json.put("options", options);
 	    	
 	    	sendAll(json.toString());
+		}else{
+			JSONObject json = new JSONObject();
+			json.put("event", "failTower");
+			JSONArray info = new JSONArray();
+			info.put(x);
+			info.put(y);
+			info.put(clients[id].isTransition( -tower.getPrice()));
+			json.put("info", info);
+			sendTo(json.toString(), id);
 		}
 	}
 	public synchronized void tryUpTower(int id,int x,int y) throws JSONException, IOException{
@@ -324,8 +334,29 @@ public class NetworkState implements Serializable, ServerLink {
 
 	@Override
 	public Target s_getTarget() {
-		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public void s_addWard(Ward ward) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void s_removeWard(boolean st) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public boolean s_isServer() {
+		return true;
+	}
+
+	@Override
+	public boolean s_isGUI() {
+		return false;
 	}
 
 	
